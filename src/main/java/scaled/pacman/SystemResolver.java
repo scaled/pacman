@@ -1,6 +1,6 @@
 //
-// Scaled - a scalable editor extensible via JVM languages
-// http://github.com/scaled/scaled/blob/master/LICENSE
+// Pacman - the Scaled package manager
+// https://github.com/scaled/pacman/blob/master/LICENSE
 
 package scaled.pacman;
 
