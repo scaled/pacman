@@ -102,6 +102,13 @@ public class Depends {
     return cp;
   }
 
+  public List<Depend.Id> flatten () {
+    List<Depend.Id> ids = new ArrayList<>();
+    Set<Source> seen = new HashSet<Source>();
+    buildFlatIds(ids, seen);
+    return ids;
+  }
+
   public void dump (PrintStream out, String indent, Set<Source> seen) {
     if (seen.add(mod.source)) {
       out.println(indent + mod.source);
@@ -123,6 +130,14 @@ public class Depends {
       cp.add(mod.classesDir());
       cp.addAll(binaryDeps.keySet());
       for (Depends dep : moduleDeps) dep.buildClasspath(cp, seen);
+    }
+  }
+
+  private void buildFlatIds (List<Depend.Id> ids, Set<Source> seen) {
+    if (seen.add(mod.source)) {
+      ids.add(mod.source);
+      ids.addAll(binaryDeps.values());
+      for (Depends dep : moduleDeps) dep.buildFlatIds(ids, seen);
     }
   }
 }
