@@ -107,7 +107,7 @@ public class PackageBuilder {
   }
 
   private List<Path> buildClasspath (Module mod) {
-    List<Path> cp = mod.loader(_repo).classpath();
+    List<Path> cp = mod.depends(_repo, false).classpath();
     cp.remove(mod.classesDir());
     return cp;
   }

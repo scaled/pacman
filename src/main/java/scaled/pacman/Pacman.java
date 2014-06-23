@@ -157,7 +157,9 @@ public class Pacman {
 
   private static void depends (String pkgName) {
     onPackage(pkgName, pkg -> {
-      for (Module mod : pkg.modules()) mod.loader(repo).dump(System.out, "", new HashSet<>());
+      for (Module mod : pkg.modules()) {
+        mod.depends(repo, false).dump(System.out, "", new HashSet<>());
+      }
     });
   }
 
