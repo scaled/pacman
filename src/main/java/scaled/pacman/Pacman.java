@@ -30,7 +30,8 @@ public class Pacman {
     "  refresh                              updates the package directory index\n" +
     "  install [pkg-name | pkg-url]         installs package (by name or url) and its depends\n" +
     "  info [pkg-name | --all]              prints detailed info on pkg-name (or all packages)\n" +
-    "  depends pkg-name                     prints the depend tree for pkg-name\n" +
+    "  deptree pkg-name                     prints depend tree for (all modules in) pkg-name\n" +
+    "  depends pkg-name#module              prints flattened depend list pkg-name#module\n" +
     "  build pkg-name [--deps]              cleans and builds pkg-name (and depends if --deps)\n" +
     "  clean pkg-name [--deps]              cleans pkg-name (and its depends if --deps)\n" +
     "  run pkg-name#module class [arg ...]  runs class from pkg-name#module with args";
@@ -56,6 +57,7 @@ public class Pacman {
     case   "refresh": refresh(); break;
     case   "install": install(args[1]); break;
     case      "info": info(args[1]); break;
+    case   "deptree": deptree(args[1]); break;
     case   "depends": depends(args[1]); break;
     case     "build": build(args[1], optarg(args, 2, "").equals("--deps")); break;
     case     "clean": clean(args[1], optarg(args, 2, "").equals("--deps")); break;
@@ -155,10 +157,18 @@ public class Pacman {
                                 tuple("Descrip:", pkg.descrip)), "", 1);
   }
 
-  private static void depends (String pkgName) {
+  private static void deptree (String pkgName) {
     onPackage(pkgName, pkg -> {
       for (Module mod : pkg.modules()) {
         mod.depends(repo, false).dump(System.out, "", new HashSet<>());
+      }
+    });
+  }
+
+  private static void depends (String pkgMod) {
+    onModule(pkgMod, mod -> {
+      for (Depend.Id id : mod.depends(repo, false).flatten()) {
+        out.println(id);
       }
     });
   }
@@ -192,12 +202,7 @@ public class Pacman {
   }
 
   private static void run (String pkgMod, String classname, String[] args) {
-    int hidx = pkgMod.indexOf("#");
-    String pkgName = (hidx == -1) ? pkgMod : pkgMod.substring(0, hidx);
-    String modName = (hidx == -1) ? Module.DEFAULT : pkgMod.substring(hidx+1);
-    onPackage(pkgName, pkg -> {
-      Module mod = pkg.module(modName);
-      if (mod == null) fail("Unknown module: " + modName + " in package: " + pkgName);
+    onModule(pkgMod, mod -> {
       try {
         Class<?> clazz = mod.loader(repo).loadClass(classname);
         clazz.getMethod("main", String[].class).invoke(null, (Object)args);
@@ -211,6 +216,17 @@ public class Pacman {
     Optional<Package> po = repo.packageByName(name);
     if (po.isPresent()) fn.accept(po.get());
     else fail("Unknown package: "+ name);
+  }
+
+  private static void onModule (String pkgMod, Consumer<Module> fn) {
+    int hidx = pkgMod.indexOf("#");
+    String pkgName = (hidx == -1) ? pkgMod : pkgMod.substring(0, hidx);
+    String modName = (hidx == -1) ? Module.DEFAULT : pkgMod.substring(hidx+1);
+    onPackage(pkgName, pkg -> {
+      Module mod = pkg.module(modName);
+      if (mod == null) fail("Unknown module: " + modName + " in package: " + pkgName);
+      else fn.accept(mod);
+    });
   }
 
   private static String[] tuple (String... strs) {
