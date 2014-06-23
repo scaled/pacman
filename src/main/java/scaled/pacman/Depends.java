@@ -97,15 +97,13 @@ public class Depends {
 
   public List<Path> classpath () {
     List<Path> cp = new ArrayList<>();
-    Set<Source> seen = new HashSet<Source>();
-    buildClasspath(cp, seen);
+    buildClasspath(cp, new HashSet<Source>());
     return cp;
   }
 
   public List<Depend.Id> flatten () {
     List<Depend.Id> ids = new ArrayList<>();
-    Set<Source> seen = new HashSet<Source>();
-    buildFlatIds(ids, seen);
+    buildFlatIds(ids, new HashSet<Source>(), false);
     return ids;
   }
 
@@ -133,11 +131,11 @@ public class Depends {
     }
   }
 
-  private void buildFlatIds (List<Depend.Id> ids, Set<Source> seen) {
+  private void buildFlatIds (List<Depend.Id> ids, Set<Source> seen, boolean self) {
     if (seen.add(mod.source)) {
-      ids.add(mod.source);
+      if (self) ids.add(mod.source);
       ids.addAll(binaryDeps.values());
-      for (Depends dep : moduleDeps) dep.buildFlatIds(ids, seen);
+      for (Depends dep : moduleDeps) dep.buildFlatIds(ids, seen, true);
     }
   }
 }
