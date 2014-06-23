@@ -96,15 +96,15 @@ public class Depends {
   }
 
   public List<Path> classpath () {
-    List<Path> cp = new ArrayList<>();
-    buildClasspath(cp, new HashSet<Source>());
-    return cp;
+    return buildClasspath(new ArrayList<>(), new HashSet<>(), true);
+  }
+
+  public List<Path> dependClasspath () {
+    return buildClasspath(new ArrayList<>(), new HashSet<>(), false);
   }
 
   public List<Depend.Id> flatten () {
-    List<Depend.Id> ids = new ArrayList<>();
-    buildFlatIds(ids, new HashSet<Source>(), false);
-    return ids;
+    return buildFlatIds(new ArrayList<>(), new HashSet<>(), false);
   }
 
   public void dump (PrintStream out, String indent, Set<Source> seen) {
@@ -123,19 +123,21 @@ public class Depends {
     for (Path path : source) if (!except.contains(path)) dest.add(path);
   }
 
-  private void buildClasspath (List<Path> cp, Set<Source> seen) {
+  private List<Path> buildClasspath (List<Path> cp, Set<Source> seen, boolean self) {
     if (seen.add(mod.source)) {
-      cp.add(mod.classesDir());
+      if (self) cp.add(mod.classesDir());
       cp.addAll(binaryDeps.keySet());
-      for (Depends dep : moduleDeps) dep.buildClasspath(cp, seen);
+      for (Depends dep : moduleDeps) dep.buildClasspath(cp, seen, true);
     }
+    return cp;
   }
 
-  private void buildFlatIds (List<Depend.Id> ids, Set<Source> seen, boolean self) {
+  private List<Depend.Id> buildFlatIds (List<Depend.Id> ids, Set<Source> seen, boolean self) {
     if (seen.add(mod.source)) {
       if (self) ids.add(mod.source);
       ids.addAll(binaryDeps.values());
       for (Depends dep : moduleDeps) dep.buildFlatIds(ids, seen, true);
     }
+    return ids;
   }
 }
