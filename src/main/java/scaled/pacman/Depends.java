@@ -7,9 +7,9 @@ package scaled.pacman;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -96,15 +96,15 @@ public class Depends {
   }
 
   public List<Path> classpath () {
-    return buildClasspath(new ArrayList<>(), new HashSet<>(), true);
+    return new ArrayList<>(buildClasspath(new LinkedHashSet<>(), true));
   }
 
   public List<Path> dependClasspath () {
-    return buildClasspath(new ArrayList<>(), new HashSet<>(), false);
+    return new ArrayList<>(buildClasspath(new LinkedHashSet<>(), false));
   }
 
   public List<Depend.Id> flatten () {
-    return buildFlatIds(new ArrayList<>(), new HashSet<>(), false);
+    return new ArrayList<>(buildFlatIds(new LinkedHashSet<>(), false));
   }
 
   public void dump (PrintStream out, String indent, Set<Source> seen) {
@@ -119,25 +119,21 @@ public class Depends {
     }
   }
 
-  private void addFiltered (Set<Path> except, List<Path> source, Collection<Path> dest) {
-    for (Path path : source) if (!except.contains(path)) dest.add(path);
+  private Set<Path> buildClasspath (Set<Path> into, boolean self) {
+    if (!into.contains(mod.classesDir())) {
+      if (self) into.add(mod.classesDir());
+      into.addAll(binaryDeps.keySet());
+      for (Depends dep : moduleDeps) dep.buildClasspath(into, true);
+    }
+    return into;
   }
 
-  private List<Path> buildClasspath (List<Path> cp, Set<Source> seen, boolean self) {
-    if (seen.add(mod.source)) {
-      if (self) cp.add(mod.classesDir());
-      cp.addAll(binaryDeps.keySet());
-      for (Depends dep : moduleDeps) dep.buildClasspath(cp, seen, true);
+  private Set<Depend.Id> buildFlatIds (Set<Depend.Id> into, boolean self) {
+    if (!into.contains(mod.source)) {
+      if (self) into.add(mod.source);
+      into.addAll(binaryDeps.values());
+      for (Depends dep : moduleDeps) dep.buildFlatIds(into, true);
     }
-    return cp;
-  }
-
-  private List<Depend.Id> buildFlatIds (List<Depend.Id> ids, Set<Source> seen, boolean self) {
-    if (seen.add(mod.source)) {
-      if (self) ids.add(mod.source);
-      ids.addAll(binaryDeps.values());
-      for (Depends dep : moduleDeps) dep.buildFlatIds(ids, seen, true);
-    }
-    return ids;
+    return into;
   }
 }
