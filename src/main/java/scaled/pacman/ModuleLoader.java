@@ -23,49 +23,12 @@ import java.util.Set;
 public class ModuleLoader extends URLClassLoader {
 
   public final Source source;
-  public final Path classes;
-  public final Collection<Path> binaryDeps;
-  public final Iterable<ModuleLoader> moduleDeps;
+  public final ModuleLoader[] moduleDeps;
 
-  public ModuleLoader (Source source, Path classes, Collection<Path> binaryDeps,
-                       Iterable<ModuleLoader> moduleDeps) {
-    super(toURLs(classes, binaryDeps));
-    this.source = source;
-    this.classes = classes;
-    this.binaryDeps = binaryDeps;
-    this.moduleDeps = moduleDeps;
-  }
-
-  public void accumBinaryDeps (Set<Path> into) {
-    into.addAll(binaryDeps);
-    for (ModuleLoader dep : moduleDeps) dep.accumBinaryDeps(into);
-  }
-
-  public List<Path> classpath () {
-    List<Path> cp = new ArrayList<>();
-    Set<Source> seen = new HashSet<Source>();
-    buildClasspath(cp, seen);
-    return cp;
-  }
-
-  public void dump (PrintStream out, String indent, Set<Source> seen) {
-    if (seen.add(source)) {
-      out.println(indent + source);
-      out.println(indent + "= " + classes);
-      String dindent = indent + "- ";
-      for (Path path : binaryDeps) out.println(dindent + path);
-      for (ModuleLoader pkg : moduleDeps) pkg.dump(out, dindent, seen);
-    } else {
-      out.println(indent + "(*) " + source);
-    }
-  }
-
-  private void buildClasspath (List<Path> cp, Set<Source> seen) {
-    if (seen.add(source)) {
-      cp.add(classes);
-      cp.addAll(binaryDeps);
-      for (ModuleLoader dep : moduleDeps) dep.buildClasspath(cp, seen);
-    }
+  public ModuleLoader (PackageRepo repo, Depends depends) {
+    super(toURLs(depends.mod.classesDir(), depends.binaryDeps.keySet()));
+    this.source = depends.mod.source;
+    this.moduleDeps = depends.moduleDeps.toArray(new ModuleLoader[depends.moduleDeps.size()]);
   }
 
   @Override public URL getResource (String path) {

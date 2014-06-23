@@ -100,46 +100,6 @@ public class PackageRepo {
     return new ArrayList<>(pkgs.values());
   }
 
-  /** Creates a class loader for {@code pkg}. */
-  public ModuleLoader createLoader (Module module, boolean testScope) {
-    List<RepoId> mvnIds = new ArrayList<>();
-    List<SystemId> sysIds = new ArrayList<>();
-    List<ModuleLoader> moduleDeps = new ArrayList<>();
-    for (Depend dep : module.depends) {
-      if (!dep.scope.include(testScope)) continue; // skip depends that don't match our scope
-      if (dep.id instanceof RepoId) mvnIds.add((RepoId)dep.id);
-      else if (dep.id instanceof SystemId) sysIds.add((SystemId)dep.id);
-      else {
-        Source depsrc = (Source)dep.id;
-        // if we depend on a module in our same package, resolve it specially; this ensures that
-        // when we're building a package prior to installing it, intrapackage depends are properly
-        // resolved even though the package itself is not yet registered with this repo
-        Optional<Module> dmod = !module.isSibling(depsrc) ? moduleBySource(depsrc) :
-          Optional.ofNullable(module.pkg.module(depsrc.module()));
-        if (dmod.isPresent()) moduleDeps.add(dmod.get().loader(this));
-        else log.log("Missing source depend", "owner", module.source, "source", depsrc);
-      }
-    }
-
-    // use a linked hash set because Capsule sometimes returns duplicate dependencies, so this will
-    // filter them out; but we need to preserve iteration order
-    LinkedHashSet<Path> binDeps = new LinkedHashSet<>();
-    // if the module has binary dependencies, resolve those and add them to maven deps
-    if (!mvnIds.isEmpty() || !sysIds.isEmpty()) {
-      // compute the transitive set of binary depends already handled by our module dependencies;
-      // we'll omit those from our binary deps because we want to "inherit" them
-      Set<Path> haveBinaryDeps = new HashSet<>();
-      for (ModuleLoader dep : moduleDeps) dep.accumBinaryDeps(haveBinaryDeps);
-      addFiltered(haveBinaryDeps, mvn.resolve(mvnIds), binDeps);
-      addFiltered(haveBinaryDeps, sys.resolve(module.source, sysIds), binDeps);
-    }
-    return new ModuleLoader(module.source, module.classesDir(), binDeps, moduleDeps);
-  }
-
-  private void addFiltered (Set<Path> except, List<Path> source, Collection<Path> dest) {
-    for (Path path : source) if (!except.contains(path)) dest.add(path);
-  }
-
   public void init () throws IOException {
     // resolve all packages in our packages directory (TODO: use cache if this is too slow)
     Files.walkFileTree(packagesDir(), FOLLOW_LINKS, MAX_PKG_DEPTH, new SimpleFileVisitor<Path>() {

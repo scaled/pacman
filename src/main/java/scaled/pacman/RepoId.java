@@ -4,7 +4,15 @@
 
 package scaled.pacman;
 
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+/** Identifies a Maven dependency. */
 public class RepoId implements Depend.Id {
+
+  public static final Path m2repo = Paths.get(
+    System.getProperty("user.home")).resolve(".m2").resolve("repository");
 
   // parses a repo depend: groupId:artifactId:version:kind
   public static RepoId parse (String text) {
@@ -13,6 +21,17 @@ public class RepoId implements Depend.Id {
       "Invalid repo id: "+ text +" (expect 'groupId:artifactId:version')");
     String kind = bits.length > 3 ? bits[3] : "jar";
     return new RepoId(bits[0], bits[1], bits[2], kind);
+  }
+
+  // extracts a repo depend from an m2repo path
+  public static RepoId fromPath (Path path) {
+    if (!path.startsWith(m2repo)) return null;
+    Path versDir = path.getParent(), artDir = versDir.getParent();
+    Path groupDir = m2repo.relativize(artDir.getParent());
+    String file = path.getFileName().toString();
+    return new RepoId(groupDir.toString().replace(File.separatorChar, '.'),
+                      artDir.getFileName().toString(), versDir.getFileName().toString(),
+                      file.substring(file.lastIndexOf('.')+1));
   }
 
   public final String groupId;
