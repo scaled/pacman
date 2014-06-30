@@ -29,6 +29,7 @@ public class Pacman {
     "  search text                          lists all packages in directory which match text\n" +
     "  refresh                              updates the package directory index\n" +
     "  install [pkg-name | pkg-url]         installs package (by name or url) and its depends\n" +
+    "  upgrade [pkg-name]                   upgrades package and its depends\n" +
     "  info [pkg-name | --all]              prints detailed info on pkg-name (or all packages)\n" +
     "  deptree pkg-name                     prints depend tree for (all modules in) pkg-name\n" +
     "  depends pkg-name#module              prints flattened depend list pkg-name#module\n" +
@@ -56,6 +57,7 @@ public class Pacman {
     case    "search": search(optarg(args, 1, "")); break;
     case   "refresh": refresh(); break;
     case   "install": install(args[1]); break;
+    case   "upgrade": upgrade(args[1]); break;
     case      "info": info(args[1]); break;
     case   "deptree": deptree(args[1]); break;
     case   "depends": depends(args[1]); break;
@@ -113,7 +115,7 @@ public class Pacman {
   private static void refresh () {
     out.println("Refreshing Scaled package index...");
     try { VCSDriver.get(Source.VCS.GIT).update(repo.packageDir(IDX_PKG_NAME)); }
-    catch (Exception e) { fail("Refresh failed: " + e.getMessage()); }
+    catch (Exception e) { fail("Refresh failed", e); }
   }
 
   private static void install (String whence) {
@@ -123,7 +125,7 @@ public class Pacman {
     // if this looks like a URL, try checking it out by URL
     else if (whence.contains(":")) {
       try { install(Source.parse(whence)); }
-      catch (Exception e) { fail("Cannot install '" + whence + "': " + e.getMessage()); }
+      catch (Exception e) { fail("Cannot install '" + whence + "'", e); }
     }
     else fail("Unknown package '" + whence + "'");
   }
@@ -133,9 +135,18 @@ public class Pacman {
       "Package already installed: " + source + "\n" +
       "Use 'spam update' to update the package if desired.");
     try {
-      PackageFetcher.install(repo, source);
+      new PackageOp(repo).install(source);
       out.println("Installation complete!");
-    } catch (Exception e) { fail("Install failed: " + e); }
+    } catch (Exception e) { fail("Install failed", e); }
+  }
+
+  private static void upgrade (String pkgName) {
+    onPackage(pkgName, pkg -> {
+      try {
+        new PackageOp(repo).upgrade(pkg);
+        out.println("Upgrade complete!");
+      } catch (Exception e) { fail("Upgrade failed", e); }
+    });
   }
 
   private static void info (String pkgName) {
@@ -215,7 +226,7 @@ public class Pacman {
   private static void onPackage (String name, Consumer<Package> fn) {
     Optional<Package> po = repo.packageByName(name);
     if (po.isPresent()) fn.accept(po.get());
-    else fail("Unknown package: "+ name);
+    else fail("Unknown package: " + name);
   }
 
   private static void onModule (String pkgMod, Consumer<Module> fn) {
@@ -245,6 +256,12 @@ public class Pacman {
 
   private static void fail (String msg) {
     System.err.println(msg);
+    System.exit(255);
+  }
+
+  private static void fail (String msg, Throwable cause) {
+    System.err.println(msg);
+    cause.printStackTrace(System.err);
     System.exit(255);
   }
 }
