@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+#
+# Runs Scaled package manager from its build directory. Mainly for testing.
+
+declare M2REPO=$HOME/.m2/repository
+declare CAPSULE=co/paralleluniverse/capsule/0.5.0/capsule-0.5.0.jar
+declare M2CAPSULE=$M2REPO/$CAPSULE
+if [ ! -s $M2CAPSULE ]; then
+    echo "Missing $M2CAPSULE"
+    exit 255
+fi
+
+addJvmArg () {
+  JVMARGS=( "${JVMARGS[@]}" "$1" )
+}
+addArg () {
+  ARGS=( "${ARGS[@]}" "$1" )
+}
+
+declare PACMAN_ROOT=`dirname $0`
+PACMAN_ROOT=`cd $PACMAN_ROOT ; cd .. ; pwd`
+declare PACMAN_CLASSES=$PACMAN_ROOT/target/classes
+
+# process command line args
+declare -a JVMARGS=("-classpath" "$PACMAN_CLASSES:$M2CAPSULE")
+declare -a ARGS=("scaled.pacman.Pacman")
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -D*     ) addJvmArg "$1"           && shift ;;
+        -J*     ) addJvmArg "${1:2}"       && shift ;;
+        -d      ) addJvmArg "-Ddebug=true" && shift ;;
+        -l|--log) LOG=$2                   && shift 2 ;;
+        *       ) addArg "$1"              && shift ;;
+    esac
+done
+
+# find java
+declare JAVA_CMD=java
+[[ -e "$JAVA_HOME/bin/java" ]] && JAVA_CMD="$JAVA_HOME/bin/java"
+
+# bombs away!
+if [ ! -z "$LOG" ]; then
+    exec $JAVA_CMD "${JVMARGS[@]}" "${ARGS[@]}" >$LOG 2>&1 &
+else
+    exec $JAVA_CMD "${JVMARGS[@]}" "${ARGS[@]}"
+fi
