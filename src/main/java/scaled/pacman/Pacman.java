@@ -189,8 +189,7 @@ public class Pacman {
       for (Package bpkg : packageOrDeps(pkg, deps)) {
         try { new PackageBuilder(repo, bpkg).build(); }
         catch (Exception e) {
-          System.err.println("Failure invoking 'build' in: " + bpkg.root);
-          e.printStackTrace(System.err);
+          fail("Failure invoking 'build' in: " + bpkg.root, e);
         }
       }
     });
@@ -201,8 +200,7 @@ public class Pacman {
       for (Package bpkg : packageOrDeps(pkg, deps)) {
         try { new PackageBuilder(repo, bpkg).clean(); }
         catch (Exception e) {
-          System.err.println("Failure invoking 'clean' in: " + bpkg.root);
-          e.printStackTrace(System.err);
+          fail("Failure invoking 'clean' in: " + bpkg.root, e);
         }
       }
     });
