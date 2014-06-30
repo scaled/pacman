@@ -52,4 +52,20 @@ public class Filez {
       }
     });
   }
+
+  /** Scans {@code dir} for any file that is newer than {@code stamp}.
+    * @return true if a newer file was found, false if not. */
+  public static boolean existsNewer (long stamp, Path dir) throws IOException {
+    if (!Files.exists(dir)) return false;
+    boolean[] sawNewer = new boolean[1]; // false
+    Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
+      @Override public FileVisitResult visitFile (Path file, BasicFileAttributes attrs)
+      throws IOException {
+        if (attrs.lastModifiedTime().toMillis() < stamp) return FileVisitResult.CONTINUE;
+        sawNewer[0] = true;
+        return FileVisitResult.TERMINATE; // we can stop now
+      }
+    });
+    return sawNewer[0];
+  }
 }

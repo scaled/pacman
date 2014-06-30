@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,17 +34,28 @@ public class PackageBuilder {
     }
   }
 
-  /** Builds all modules in this package. */
+  /** Cleans and builds all modules in this package. */
   public void build () throws IOException {
     for (Module mod : _pkg.modules()) build(mod);
   }
 
-  /** Builds the specified module. */
-  public void build (Module mod) throws IOException {
+  /** Cleans and builds any modules in this package which have source files that have been modified
+    * since the previous build. */
+  public void rebuild () throws IOException {
+    for (Module mod : _pkg.modules()) rebuild(mod);
+  }
+
+  protected void build (Module mod) throws IOException {
     if (!mod.isDefault()) _repo.log.log("Building " + mod.pkg.name + "#" + mod.name + "...");
 
-    // create the build output directory
+    // clear out and (re)create (if needed), the build output directory
+    Filez.deleteAll(mod.classesDir());
     Files.createDirectories(mod.classesDir());
+
+    // create a build timestamp file
+    Path buildStamp = mod.classesDir().resolve(BUILD_STAMP);
+    Files.write(buildStamp, Arrays.asList("."),
+                StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
 
     // if a resources directory exists, copy that over
     Path rsrcDir = mod.resourcesDir();
@@ -61,7 +73,13 @@ public class PackageBuilder {
     // TODO: support other languages
   }
 
-  private void buildScala (Module mod, Path scalaDir, Path javaDir) throws IOException {
+  protected void rebuild (Module mod) throws IOException {
+    Path stampFile = mod.classesDir().resolve(BUILD_STAMP);
+    long lastBuild = Files.exists(stampFile) ? Files.getLastModifiedTime(stampFile).toMillis() : 0L;
+    if (Filez.existsNewer(lastBuild, mod.mainDir())) build(mod);
+  }
+
+  protected void buildScala (Module mod, Path scalaDir, Path javaDir) throws IOException {
     List<String> cmd = new ArrayList<>();
     cmd.add(findJavaHome().resolve("bin").resolve("java").toString());
 
@@ -80,7 +98,7 @@ public class PackageBuilder {
     Exec.exec(mod.root, cmd).expect(0, "Scala build failed.");
   }
 
-  private void buildJava (Module mod, Path javaDir) throws IOException {
+  protected void buildJava (Module mod, Path javaDir) throws IOException {
     List<String> cmd = new ArrayList<>();
     cmd.add(findJavaHome().resolve("bin").resolve("javac").toString());
 
@@ -93,7 +111,7 @@ public class PackageBuilder {
     Exec.exec(mod.root, cmd).expect(0, "Java build failed.");
   }
 
-  private void addSources (Path root, Path dir, String suff, List<String> into) throws IOException {
+  protected void addSources (Path root, Path dir, String suff, List<String> into) throws IOException {
     Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
       @Override public FileVisitResult visitFile (Path file, BasicFileAttributes attrs)
       throws IOException {
@@ -106,13 +124,13 @@ public class PackageBuilder {
     });
   }
 
-  private List<Path> buildClasspath (Module mod) {
+  protected List<Path> buildClasspath (Module mod) {
     List<Path> cp = mod.depends(_repo, false).classpath();
     cp.remove(mod.classesDir());
     return cp;
   }
 
-  private String classpathToString (List<Path> paths) {
+  protected String classpathToString (List<Path> paths) {
     String pathSep = System.getProperty("path.separator");
     StringBuilder sb = new StringBuilder();
     for (Path path : paths) {
@@ -122,7 +140,7 @@ public class PackageBuilder {
     return sb.toString();
   }
 
-  private Path findJavaHome () throws IOException {
+  protected Path findJavaHome () throws IOException {
     Path jreHome = Paths.get(System.getProperty("java.home"));
     Path javaHome = jreHome.getParent();
     if (isJavaHome(javaHome)) return javaHome;
@@ -130,10 +148,11 @@ public class PackageBuilder {
     throw new IllegalStateException("Unable to find java in " + jreHome + " or " + javaHome);
   }
 
-  private boolean isJavaHome (Path javaHome) {
+  protected boolean isJavaHome (Path javaHome) {
     return Files.exists(javaHome.resolve("bin").resolve("java"));
   }
 
-  private final PackageRepo _repo;
-  private final Package _pkg;
+  protected final PackageRepo _repo;
+  protected final Package _pkg;
+  protected static final String BUILD_STAMP = "build.stamp";
 }
