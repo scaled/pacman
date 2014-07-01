@@ -3,4 +3,4 @@ language: java
 jdk:
 - oraclejdk8
 
-script: "./bin/install-test.sh"
+after_script: "./bin/install-test.sh"
