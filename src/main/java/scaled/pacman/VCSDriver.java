@@ -6,6 +6,7 @@ package scaled.pacman;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
@@ -54,6 +55,10 @@ public abstract class VCSDriver {
     }
 
     private String readOrigin (Path root) throws IOException {
+      // if there's no .git directory here, don't run git because it will search up the directory
+      // heirarchy for a .git dir which is not what we want
+      if (!Files.exists(root.resolve(".git"))) return "";
+      // if there is a .git directory, then we can run 'git remote -v' to see what we have
       for (String line : Exec.exec(root, "git", "remote", "-v").output()) {
         String[] bits = line.split("\\s");
         if (bits[0].equals("origin")) return bits[1];
