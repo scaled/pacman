@@ -69,19 +69,19 @@ public class Module implements Comparable<Module> {
     return pkg.source.equals(source.packageSource());
   }
 
-  public Depends depends (PackageRepo repo, boolean forTest) {
+  public Depends depends (Depends.Resolver resolve, boolean forTest) {
     if (forTest) {
-      if (_testDepends == null) _testDepends = new Depends(this, repo, true);
+      if (_testDepends == null) _testDepends = new Depends(this, resolve, true);
       return _testDepends;
     } else {
-      if (_depends == null) _depends = new Depends(this, repo, false);
+      if (_depends == null) _depends = new Depends(this, resolve, false);
       return _depends;
     }
   }
 
   /** Returns a class loader for loading classes from this module and its depends. */
-  public ModuleLoader loader (PackageRepo repo) {
-    if (_loader == null) _loader = new ModuleLoader(repo, depends(repo, false));
+  public ModuleLoader loader (Depends.Resolver resolve) {
+    if (_loader == null) _loader = new ModuleLoader(resolve, depends(resolve, false));
     return _loader;
   }
 

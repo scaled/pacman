@@ -25,12 +25,12 @@ public class ModuleLoader extends URLClassLoader {
   public final Source source;
   public final ModuleLoader[] moduleDeps;
 
-  public ModuleLoader (PackageRepo repo, Depends depends) {
+  public ModuleLoader (Depends.Resolver resolve, Depends depends) {
     super(toURLs(depends.mod.classesDir(), depends.binaryDeps.keySet()));
     this.source = depends.mod.source;
     this.moduleDeps = new ModuleLoader[depends.moduleDeps.size()];
     int ii = 0;
-    for (Depends dep : depends.moduleDeps) moduleDeps[ii++] = dep.mod.loader(repo);
+    for (Depends dep : depends.moduleDeps) moduleDeps[ii++] = dep.mod.loader(resolve);
   }
 
   @Override public URL getResource (String path) {

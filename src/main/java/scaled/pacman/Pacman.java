@@ -171,14 +171,14 @@ public class Pacman {
   private static void deptree (String pkgName) {
     onPackage(pkgName, pkg -> {
       for (Module mod : pkg.modules()) {
-        mod.depends(repo, false).dump(System.out, "", new HashSet<>());
+        mod.depends(repo.resolver, false).dump(System.out, "", new HashSet<>());
       }
     });
   }
 
   private static void depends (String pkgMod) {
     onModule(pkgMod, mod -> {
-      for (Depend.Id id : mod.depends(repo, false).flatten()) {
+      for (Depend.Id id : mod.depends(repo.resolver, false).flatten()) {
         out.println(id);
       }
     });
@@ -213,7 +213,7 @@ public class Pacman {
   private static void run (String pkgMod, String classname, String[] args) {
     onModule(pkgMod, mod -> {
       try {
-        Class<?> clazz = mod.loader(repo).loadClass(classname);
+        Class<?> clazz = mod.loader(repo.resolver).loadClass(classname);
         clazz.getMethod("main", String[].class).invoke(null, (Object)args);
       } catch (Exception e) {
         e.printStackTrace(System.err);

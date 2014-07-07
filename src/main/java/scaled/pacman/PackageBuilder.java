@@ -125,7 +125,7 @@ public class PackageBuilder {
   }
 
   protected List<Path> buildClasspath (Module mod) {
-    List<Path> cp = mod.depends(_repo, false).classpath();
+    List<Path> cp = mod.depends(_repo.resolver, false).classpath();
     cp.remove(mod.classesDir());
     return cp;
   }

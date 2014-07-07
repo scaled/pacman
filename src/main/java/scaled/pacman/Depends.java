@@ -28,6 +28,21 @@ import java.util.Set;
  */
 public class Depends {
 
+  /** Used to resolve module dependencies. */
+  public static interface Resolver {
+    /** Returns the module identified by {@code source}, if any. */
+    Optional<Module> moduleBySource (Source source);
+
+    /** Resolves the supplied Maven depends. */
+    List<Path> resolve (List<RepoId> ids);
+
+    /** Resolves the supplied system depend. */
+    Path resolve (SystemId id);
+
+    /** Logs dependency resolution warnings. */
+    void log (String message);
+  }
+
   /** The module whose dependencies we contain. */
   public final Module mod;
 
@@ -43,7 +58,7 @@ public class Depends {
   /** The module dependencies for this module. */
   public final List<Depends> moduleDeps;
 
-  public Depends (Module module, PackageRepo repo, boolean testScope) {
+  public Depends (Module module, Resolver resolve, boolean testScope) {
     List<RepoId> mvnIds = new ArrayList<>();
     List<SystemId> sysIds = new ArrayList<>();
     List<Depends> moduleDeps = new ArrayList<>();
@@ -56,10 +71,10 @@ public class Depends {
         // if we depend on a module in our same package, resolve it specially; this ensures that
         // when we're building a package prior to installing it, intrapackage depends are properly
         // resolved even though the package itself is not yet registered with this repo
-        Optional<Module> dmod = !module.isSibling(depsrc) ? repo.moduleBySource(depsrc) :
+        Optional<Module> dmod = !module.isSibling(depsrc) ? resolve.moduleBySource(depsrc) :
           Optional.ofNullable(module.pkg.module(depsrc.module()));
-        if (dmod.isPresent()) moduleDeps.add(dmod.get().depends(repo, testScope));
-        else repo.log.log("Missing source depend", "owner", module.source, "source", depsrc);
+        if (dmod.isPresent()) moduleDeps.add(dmod.get().depends(resolve, testScope));
+        else resolve.log("Missing source depend [owner=" + module.source + ", src=" + depsrc + "]");
       }
     }
 
@@ -74,12 +89,12 @@ public class Depends {
       // resolve and add our Maven depends (reverse engineer the RepoId from the paths returned by
       // Capsule; I don't want to hack up Capsule to return other data and extracting Maven
       // coordinates from file path isn't particularly fiddly)
-      for (Path path : repo.mvn.resolve(mvnIds)) {
+      for (Path path : resolve.resolve(mvnIds)) {
         if (!haveBinaryDeps.contains(path)) binDeps.put(path, RepoId.fromPath(path));
       }
       // resolve and add our System depends
       for (SystemId sysId : sysIds) {
-        Path path = repo.sys.resolve(sysId);
+        Path path = resolve.resolve(sysId);
         if (!haveBinaryDeps.contains(path)) binDeps.put(path, sysId);
       }
     }

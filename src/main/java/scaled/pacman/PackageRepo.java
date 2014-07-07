@@ -51,6 +51,23 @@ public class PackageRepo {
   /** Used to resolve System artifacts. */
   public final SystemResolver sys = new SystemResolver(log);
 
+  /** Used to resolve dependencies. */
+  public final Depends.Resolver resolver = new Depends.Resolver() {
+    public Optional<Module> moduleBySource (Source source) {
+      Package pkg = _pkgs.get(source.packageSource());
+      return Optional.ofNullable(pkg == null ? null : pkg.module(source.module()));
+    }
+    public List<Path> resolve (List<RepoId> ids) {
+      return mvn.resolve(ids);
+    }
+    public Path resolve (SystemId id) {
+      return sys.resolve(id);
+    }
+    public void log (String message) {
+      log.log(message);
+    }
+  };
+
   /** Creates (if necessary) and returns a directory in the top-level Scaled metadata directory. */
   public Path metaDir (String name) throws IOException {
     Path dir = metaDir.resolve(name);
@@ -83,12 +100,6 @@ public class PackageRepo {
   /** Returns the package identified by {@code source}, if any. */
   public Optional<Package> packageBySource (Source source) {
     return Optional.ofNullable(_pkgs.get(source));
-  }
-
-  /** Returns the module identified by {@code source}, if any. */
-  public Optional<Module> moduleBySource (Source source) {
-    Package pkg = _pkgs.get(source.packageSource());
-    return Optional.ofNullable(pkg == null ? null : pkg.module(source.module()));
   }
 
   /** Returns a list of {@code pkg}'s transitive module dependencies. The list will be ordered such
