@@ -3,9 +3,11 @@
 # Scaled Package Manager bootstrap script
 
 # determine the location where pacman will store its bits
-declare SCALED_HOME=$HOME/.scaled
-declare APPSUP="$HOME/Library/Application Support"
-[[ -d $APPSUP ]] && SCALED_HOME="$APPSUP/Scaled"
+if [ -z "$SCALED_HOME" ]; then
+    SCALED_HOME=$HOME/.scaled
+    APPSUP="$HOME/Library/Application Support"
+    [[ -d $APPSUP ]] && SCALED_HOME="$APPSUP/Scaled"
+fi
 
 declare PACMAN_ROOT=$SCALED_HOME/Packages/pacman
 declare PACMAN_SPAM=$PACMAN_ROOT/bin/spam
