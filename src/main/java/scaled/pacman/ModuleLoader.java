@@ -23,20 +23,26 @@ import java.util.Set;
 public class ModuleLoader extends URLClassLoader {
 
   public final Source source;
-  public final ModuleLoader[] moduleDeps;
+  public final ClassLoader[] delegates;
+
+  public static URL toURL (Path path) {
+    try { return path.toUri().toURL(); }
+    catch (MalformedURLException e) { throw new AssertionError(e); }
+  }
 
   public ModuleLoader (Depends.Resolver resolve, Depends depends) {
     super(toURLs(depends.mod.classesDir(), depends.binaryDeps.keySet()));
     this.source = depends.mod.source;
-    this.moduleDeps = new ModuleLoader[depends.moduleDeps.size()];
+    this.delegates = new ClassLoader[depends.sharedDeps.size()+depends.moduleDeps.size()];
     int ii = 0;
-    for (Depends dep : depends.moduleDeps) moduleDeps[ii++] = dep.mod.loader(resolve);
+    for (Path path : depends.sharedDeps.keySet()) delegates[ii++] = resolve.sharedLoader(path);
+    for (Depends dep : depends.moduleDeps) delegates[ii++] = dep.mod.loader(resolve);
   }
 
   @Override public URL getResource (String path) {
     URL rsrc = super.getResource(path);
     if (rsrc != null) return rsrc;
-    for (ModuleLoader loader : moduleDeps) {
+    for (ClassLoader loader : delegates) {
       URL drsrc = loader.getResource(path);
       if (drsrc != null) return drsrc;
     }
@@ -47,7 +53,7 @@ public class ModuleLoader extends URLClassLoader {
     // System.err.println("Seeking "+ name +" in "+ source);
     try { return super.findClass(name); }
     catch (ClassNotFoundException cnfe) {} // check our module deps
-    for (ModuleLoader loader : moduleDeps) {
+    for (ClassLoader loader : delegates) {
       try { return loader.loadClass(name); }
       catch (ClassNotFoundException cnfe) {} // keep going
     }
@@ -64,10 +70,5 @@ public class ModuleLoader extends URLClassLoader {
     urls[ii++] = toURL(classes);
     for (Path path : paths) urls[ii++] = toURL(path);
     return urls;
-  }
-
-  private static URL toURL (Path path) {
-    try { return path.toUri().toURL(); }
-    catch (MalformedURLException e) { throw new AssertionError(e); }
   }
 }

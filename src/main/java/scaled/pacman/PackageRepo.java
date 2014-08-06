@@ -5,6 +5,8 @@
 package scaled.pacman;
 
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -13,6 +15,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -63,9 +66,21 @@ public class PackageRepo {
     public Path resolve (SystemId id) {
       return sys.resolve(id);
     }
+    public boolean isShared (RepoId id) {
+      Set<String> arts = SHARED_DEPS.get(id.groupId);
+      return (arts != null) && arts.contains(id.artifactId);
+    }
+    public ClassLoader sharedLoader (Path path) {
+      ClassLoader cl = _sharedLoaders.get(path);
+      if (cl == null) _sharedLoaders.put(
+        path, cl = new URLClassLoader(new URL[] { ModuleLoader.toURL(path) }));
+      return cl;
+    }
     public void log (String message) {
       log.log(message);
     }
+
+    private Map<Path,ClassLoader> _sharedLoaders = new HashMap<>();
   };
 
   /** Creates (if necessary) and returns a directory in the top-level Scaled metadata directory. */
@@ -174,4 +189,15 @@ public class PackageRepo {
   private static final Set<FileVisitOption> FOLLOW_LINKS = Collections.singleton(
     FileVisitOption.FOLLOW_LINKS);
   private static final int MAX_PKG_DEPTH = 6;
+
+  // UGLY HACK ALERT: these dependencies are shared by all modules rather than duplicated for each
+  // module; dependencies that show up in the public APIs of unrelated modules must come from the
+  // same classloader; we cannot allow those dependencies to be duplicated by each module
+  // classloader lest everything blow up when another module tries to use two or more of the
+  // duplicators; right now only scala-library meets this criterion, but other depends will likely
+  // join this club once we better support other JVM languages
+  private static final Map<String,Set<String>> SHARED_DEPS = new HashMap<>();
+  static {
+    SHARED_DEPS.put("org.scala-lang", new HashSet<String>(Arrays.asList("scala-library")));
+  }
 }
