@@ -8,6 +8,7 @@ import capsule.DependencyManager;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 public class MavenResolver {
@@ -18,6 +19,8 @@ public class MavenResolver {
   public List<Path> resolve (List<RepoId> ids) {
     List<String> coords = new ArrayList<>();
     for (RepoId id : ids) coords.add(id.toCoord());
-    return capsule.resolveDependencies(coords, "jar");
+    // filter the resolved depends through a linked hashset, which eliminates duplicates while
+    // preserving order
+    return new ArrayList<Path>(new LinkedHashSet<Path>(capsule.resolveDependencies(coords, "jar")));
   }
 }
