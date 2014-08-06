@@ -19,18 +19,6 @@ public class SystemResolver {
     this.log = log;
   }
 
-  public List<Path> resolve (Source owner, List<SystemId> ids) {
-    List<Path> results = new ArrayList<>();
-    for (SystemId id : ids) {
-      try {
-        results.add(resolve(id));
-      } catch (Exception e) {
-        log.log("Failed to resolve system depend", "source", owner, "id", id, "error", e);
-      }
-    }
-    return results;
-  }
-
   public Path resolve (SystemId id) {
     if (id.platform.equals("jdk")) {
       if (id.artifact.equals("tools")) {

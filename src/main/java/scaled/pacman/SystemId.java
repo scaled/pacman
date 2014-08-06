@@ -38,5 +38,4 @@ public class SystemId implements Depend.Id {
     return (platform.equals(oid.platform) && artifact.equals(oid.artifact) &&
             version.equals(oid.version));
   }
-
 }

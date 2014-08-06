@@ -76,9 +76,6 @@ public class PackageRepo {
         path, cl = new URLClassLoader(new URL[] { ModuleLoader.toURL(path) }));
       return cl;
     }
-    public void log (String message) {
-      log.log(message);
-    }
 
     private Map<Path,ClassLoader> _sharedLoaders = new HashMap<>();
   };

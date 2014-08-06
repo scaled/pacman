@@ -53,9 +53,6 @@ public class Depends {
 
     /** Returns the classloader for the specified shared dependency. */
     ClassLoader sharedLoader (Path path);
-
-    /** Logs dependency resolution warnings. */
-    void log (String message);
   }
 
   /** The module whose dependencies we contain. */
@@ -77,13 +74,17 @@ public class Depends {
   /** The module dependencies for this module. */
   public final List<Depends> moduleDeps;
 
+  /** Contains any declared source dependencies that could not be resolved. */
+  public final List<Depend.MissingId> missingDeps;
+
   public Depends (Module module, Resolver resolve, boolean testScope) {
     this.mod = module;
     this.scope = testScope ? Depend.Scope.TEST : Depend.Scope.MAIN;
-    this.moduleDeps = new ArrayList<>();
     this.sharedDeps = new HashMap<>();
     // use a linked hash map because we need to preserve iteration order for bindeps
     this.binaryDeps = new LinkedHashMap<>();
+    this.moduleDeps = new ArrayList<>();
+    this.missingDeps = new ArrayList<>();
 
     List<RepoId> mvnIds = new ArrayList<>();
     List<SystemId> sysIds = new ArrayList<>();
@@ -99,7 +100,7 @@ public class Depends {
         Optional<Module> dmod = !module.isSibling(depsrc) ? resolve.moduleBySource(depsrc) :
           Optional.ofNullable(module.pkg.module(depsrc.module()));
         if (dmod.isPresent()) moduleDeps.add(dmod.get().depends(resolve, testScope));
-        else resolve.log("Missing source depend [owner=" + module.source + ", src=" + depsrc + "]");
+        else missingDeps.add(new Depend.MissingId(dep.id));
       }
     }
 
@@ -121,8 +122,10 @@ public class Depends {
     }
 
     // resolve our System depends; system depends are always shared
-    for (SystemId sysId : sysIds) {
+    for (SystemId sysId : sysIds) try {
       sharedDeps.put(resolve.resolve(sysId), sysId);
+    } catch (IllegalArgumentException e) {
+      missingDeps.add(new Depend.MissingId(sysId));
     }
   }
 
@@ -171,6 +174,8 @@ public class Depends {
       if (self) into.add(mod.source);
       into.addAll(binaryDeps.values());
       into.addAll(sharedDeps.values());
+      // we were unable to resolve them, but we can still report them
+      into.addAll(missingDeps);
       for (Depends dep : moduleDeps) dep.buildFlatIds(into, true);
     }
     return into;

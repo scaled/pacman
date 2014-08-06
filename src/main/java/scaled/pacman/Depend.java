@@ -11,6 +11,16 @@ public class Depend {
   public static interface Id {
   }
 
+  public static class MissingId implements Id {
+    public final Id id;
+    public MissingId (Id id) {
+      this.id = id;
+    }
+    public String toString () {
+      return "*missing: " + id + "*";
+    }
+  }
+
   public static enum Scope {
     MAIN {
       public boolean include (boolean testScope) { return true; }
