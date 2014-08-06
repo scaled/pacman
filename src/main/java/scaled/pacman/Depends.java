@@ -160,6 +160,7 @@ public class Depends {
     if (!into.contains(mod.classesDir())) {
       if (self) into.add(mod.classesDir());
       into.addAll(binaryDeps.keySet());
+      into.addAll(sharedDeps.keySet());
       for (Depends dep : moduleDeps) dep.buildClasspath(into, true);
     }
     return into;
