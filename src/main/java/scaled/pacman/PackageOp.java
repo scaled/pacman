@@ -63,13 +63,16 @@ public class PackageOp {
       // if we actually rebuilt anything, upgrade any packages that depend on this package
       Set<Package> updeps = new HashSet<>();
       for (Package dpkg : _repo.packages()) {
-        if (dpkg.packageDepends().contains(pkg.source)) updeps.add(dpkg);
+        if (dpkg.packageDepends().contains(pkg.source)) {
+          // force this package to be rebuild (which may not yet have happened even if the package
+          // is already in _upgraded)
+          _forceBuild.add(dpkg.source);
+          // omit this package from our forced upgrade list if it's already been upgraded
+          if (!_upgraded.contains(dpkg.source)) updeps.add(dpkg);
+        }
       }
       if (!updeps.isEmpty()) {
         _repo.log.log("Upgrading " + updeps.size() + " dependents on " + npkg.name + "...");
-        // force all of our dependents to be rebuilt; this package may no longer be binary
-        // compatible with its previous build
-        _forceBuild.addAll(updeps);
         for (Package updep : updeps) upgrade(updep);
       }
     }
@@ -88,12 +91,12 @@ public class PackageOp {
 
   protected boolean rebuild (Package pkg) throws IOException {
     PackageBuilder pb = new PackageBuilder(_repo, pkg);
-    if (!_forceBuild.contains(pkg)) return pb.rebuild();
+    if (!_forceBuild.contains(pkg.source)) return pb.rebuild();
     pb.build();
     return true;
   }
 
   protected final PackageRepo _repo;
   protected final Set<Source> _upgraded = new HashSet<>();
-  protected final Set<Package> _forceBuild = new HashSet<>();
+  protected final Set<Source> _forceBuild = new HashSet<>();
 }
