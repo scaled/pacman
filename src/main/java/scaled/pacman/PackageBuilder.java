@@ -56,11 +56,6 @@ public class PackageBuilder {
     Filez.deleteAll(mod.classesDir());
     Files.createDirectories(mod.classesDir());
 
-    // create a build timestamp file
-    Path buildStamp = mod.classesDir().resolve(BUILD_STAMP);
-    Files.write(buildStamp, Arrays.asList("."),
-                StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
-
     // if a resources directory exists, copy that over
     Path rsrcDir = mod.resourcesDir();
     if (Files.exists(rsrcDir)) Filez.copyAll(rsrcDir, mod.classesDir());
@@ -81,8 +76,8 @@ public class PackageBuilder {
   }
 
   protected boolean rebuild (Module mod) throws IOException {
-    Path stampFile = mod.classesDir().resolve(BUILD_STAMP);
-    long lastBuild = Files.exists(stampFile) ? Files.getLastModifiedTime(stampFile).toMillis() : 0L;
+    Path moduleJar = mod.moduleJar();
+    long lastBuild = Files.exists(moduleJar) ? Files.getLastModifiedTime(moduleJar).toMillis() : 0L;
     if (!Filez.existsNewer(lastBuild, mod.mainDir())) return false;
     build(mod);
     return true;
@@ -172,5 +167,4 @@ public class PackageBuilder {
 
   protected final PackageRepo _repo;
   protected final Package _pkg;
-  protected static final String BUILD_STAMP = "build.stamp";
 }
