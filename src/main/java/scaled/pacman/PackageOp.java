@@ -56,7 +56,12 @@ public class PackageOp {
 
     // reparse this package's depends, install any new depends, upgrade any existing depends
     Package npkg = pf.readPackage();
-    installDepends(npkg);
+    Set<Source> npdeps = npkg.packageDepends();
+    npdeps.removeAll(_upgraded);
+    if (!npdeps.isEmpty()) {
+      _repo.log.log("Updating " + npdeps.size() + " pkgs on which " + npkg.name + " depends...");
+      installDepends(npkg);
+    }
 
     // rebuild the package itself
     if (rebuild(npkg)) {
@@ -72,7 +77,7 @@ public class PackageOp {
         }
       }
       if (!updeps.isEmpty()) {
-        _repo.log.log("Upgrading " + updeps.size() + " dependents on " + npkg.name + "...");
+        _repo.log.log("Upgrading " + updeps.size() + " pkgs which depend on " + npkg.name + "...");
         for (Package updep : updeps) upgrade(updep);
       }
     }
