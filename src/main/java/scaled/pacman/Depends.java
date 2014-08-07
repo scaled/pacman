@@ -149,7 +149,7 @@ public class Depends {
   public void dump (PrintStream out, String indent, Set<Source> seen) {
     if (seen.add(mod.source)) {
       out.println(indent + mod.source);
-      out.println(indent + "= " + mod.classesDir());
+      out.println(indent + "= " + mod.classpath());
       String dindent = indent + "- ";
       for (Path path : binaryDeps.keySet()) out.println(dindent + path);
       for (Path path : sharedDeps.keySet()) out.println(dindent + path + " (shared)");
@@ -160,8 +160,8 @@ public class Depends {
   }
 
   private Set<Path> buildClasspath (Set<Path> into, boolean self) {
-    if (!into.contains(mod.classesDir())) {
-      if (self) into.add(mod.classesDir());
+    if (!into.contains(mod.classpath())) {
+      if (self) into.add(mod.classpath());
       into.addAll(binaryDeps.keySet());
       into.addAll(sharedDeps.keySet());
       for (Depends dep : moduleDeps) dep.buildClasspath(into, true);

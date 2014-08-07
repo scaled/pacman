@@ -97,6 +97,9 @@ public class Module implements Comparable<Module> {
 
   public Path outputDir () { return root.resolve("target"); }
   public Path classesDir () { return outputDir().resolve("classes"); }
+  public Path moduleJar () { return outputDir().resolve("module.jar"); }
+
+  public Path classpath () { return Files.exists(moduleJar()) ? moduleJar() : classesDir(); }
 
   // from interface Comparable
   public int compareTo (Module other) {

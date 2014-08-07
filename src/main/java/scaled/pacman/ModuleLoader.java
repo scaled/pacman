@@ -31,7 +31,7 @@ public class ModuleLoader extends URLClassLoader {
   }
 
   public ModuleLoader (Depends.Resolver resolve, Depends depends) {
-    super(toURLs(depends.mod.classesDir(), depends.binaryDeps.keySet()));
+    super(toURLs(depends.mod.classpath(), depends.binaryDeps.keySet()));
     this.source = depends.mod.source;
     this.delegates = new ClassLoader[depends.sharedDeps.size()+depends.moduleDeps.size()];
     int ii = 0;

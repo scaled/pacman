@@ -71,6 +71,9 @@ public class PackageBuilder {
     if (scalaDir != null) buildScala(mod, scalaDir, javaDir);
     if (javaDir != null) buildJava(mod, javaDir);
     // TODO: support other languages
+
+    // finally jar everything up
+    createJar(mod.classesDir(), mod.moduleJar());
   }
 
   protected void rebuild (Module mod) throws IOException {
@@ -109,6 +112,15 @@ public class PackageBuilder {
     addSources(mod.root, javaDir, ".java", cmd);
 
     Exec.exec(mod.root, cmd).expect(0, "Java build failed.");
+  }
+
+  protected void createJar (Path sourceDir, Path targetJar) throws IOException {
+    List<String> cmd = new ArrayList<>();
+    cmd.add("jar");
+    cmd.add("-cf");
+    cmd.add(targetJar.toString());
+    cmd.add(".");
+    Exec.exec(sourceDir, cmd).expect(0, "Jar creation failed.");
   }
 
   protected void addSources (Path root, Path dir, String suff, List<String> into) throws IOException {
