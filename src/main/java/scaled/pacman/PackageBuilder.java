@@ -41,12 +41,16 @@ public class PackageBuilder {
 
   /** Cleans and builds any modules in this package which have source files that have been modified
     * since the previous build. */
-  public void rebuild () throws IOException {
-    for (Module mod : _pkg.modules()) rebuild(mod);
+  public boolean rebuild () throws IOException {
+    boolean rebuilt = false;
+    for (Module mod : _pkg.modules()) rebuilt = rebuild(mod) || rebuilt;
+    return rebuilt;
   }
 
   protected void build (Module mod) throws IOException {
-    if (!mod.isDefault()) _repo.log.log("Building " + mod.pkg.name + "#" + mod.name + "...");
+    String what = mod.pkg.name;
+    if (!mod.isDefault()) what += "#" + mod.name;
+    _repo.log.log("Building " + what + "...");
 
     // clear out and (re)create (if needed), the build output directory
     Filez.deleteAll(mod.classesDir());
@@ -76,10 +80,12 @@ public class PackageBuilder {
     createJar(mod.classesDir(), mod.moduleJar());
   }
 
-  protected void rebuild (Module mod) throws IOException {
+  protected boolean rebuild (Module mod) throws IOException {
     Path stampFile = mod.classesDir().resolve(BUILD_STAMP);
     long lastBuild = Files.exists(stampFile) ? Files.getLastModifiedTime(stampFile).toMillis() : 0L;
-    if (Filez.existsNewer(lastBuild, mod.mainDir())) build(mod);
+    if (!Filez.existsNewer(lastBuild, mod.mainDir())) return false;
+    build(mod);
+    return true;
   }
 
   protected void buildScala (Module mod, Path scalaDir, Path javaDir) throws IOException {

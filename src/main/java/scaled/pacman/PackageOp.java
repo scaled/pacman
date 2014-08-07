@@ -47,7 +47,7 @@ public class PackageOp {
   /** Upgrades the package referenced by {@code source} and all of its depends. */
   public void upgrade (Package pkg) throws IOException {
     // if we've already upgraded this package during this operation, don't do it again
-    if (_upgraded.contains(pkg.source)) return;
+    if (!_upgraded.add(pkg.source)) return;
 
     // update the VCS clone of this package's source tree
     PackageFetcher pf = new PackageFetcher(_repo, pkg.source, pkg.root);
@@ -59,20 +59,19 @@ public class PackageOp {
     installDepends(npkg);
 
     // rebuild the package itself
-    _repo.log.log("Rebuilding " + npkg.name + "...");
-    new PackageBuilder(_repo, npkg).rebuild();
-
-    // note that this package has been upgraded during this operation
-    _upgraded.add(pkg.source);
-
-    // upgrade any packages that depend on this package
-    Set<Package> updeps = new HashSet<>();
-    for (Package dpkg : _repo.packages()) {
-      if (dpkg.packageDepends().contains(pkg.source)) updeps.add(dpkg);
-    }
-    if (!updeps.isEmpty()) {
-      _repo.log.log("Upgrading " + updeps.size() + " packages that depend on " + npkg.name + "...");
-      for (Package updep : updeps) upgrade(updep);
+    if (rebuild(npkg)) {
+      // if we actually rebuilt anything, upgrade any packages that depend on this package
+      Set<Package> updeps = new HashSet<>();
+      for (Package dpkg : _repo.packages()) {
+        if (dpkg.packageDepends().contains(pkg.source)) updeps.add(dpkg);
+      }
+      if (!updeps.isEmpty()) {
+        _repo.log.log("Upgrading " + updeps.size() + " dependents on " + npkg.name + "...");
+        // force all of our dependents to be rebuilt; this package may no longer be binary
+        // compatible with its previous build
+        _forceBuild.addAll(updeps);
+        for (Package updep : updeps) upgrade(updep);
+      }
     }
   }
 
@@ -87,6 +86,14 @@ public class PackageOp {
     }
   }
 
+  protected boolean rebuild (Package pkg) throws IOException {
+    PackageBuilder pb = new PackageBuilder(_repo, pkg);
+    if (!_forceBuild.contains(pkg)) return pb.rebuild();
+    pb.build();
+    return true;
+  }
+
   protected final PackageRepo _repo;
   protected final Set<Source> _upgraded = new HashSet<>();
+  protected final Set<Package> _forceBuild = new HashSet<>();
 }
