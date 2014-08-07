@@ -52,7 +52,6 @@ fi
 
 # check out pacman package if needed
 declare PACMAN_GIT=https://github.com/scaled/pacman.git
-declare PACMAN_CLASSES=$PACMAN_ROOT/target/classes
 if [ ! -d "$PACMAN_ROOT" ]; then
     if hash git 2>/dev/null; then
         echo "Cloning $PACMAN_GIT..."
@@ -64,16 +63,21 @@ if [ ! -d "$PACMAN_ROOT" ]; then
 fi
 
 # build pacman if needed
-if [ ! -s "$PACMAN_CLASSES/scaled/pacman/Pacman.class" ]; then
+declare PACMAN_CLASSES=$PACMAN_ROOT/target/classes
+declare PACMAN_JAR=$PACMAN_ROOT/target/module.jar
+if [ ! -s "$PACMAN_JAR" ]; then
     # find javac
     declare JAVAC_CMD=javac
     [[ -e "$JAVA_HOME/bin/javac" ]] && JAVA_CMD="$JAVA_HOME/bin/javac"
 
     pushd "$PACMAN_ROOT"
-    mkdir -p "target/classes"
-    find src/main/java -name '*.java' > "target/pacman.sources"
+    rm -rf target/classes
+    mkdir -p target/classes
+    find src/main/java -name '*.java' > target/pacman.sources
     echo "Compiling Scaled package manager..."
     $JAVAC_CMD -classpath "$M2CAPSULE" -d target/classes @target/pacman.sources
+    cd target/classes
+    jar -cf ../module.jar .
     popd
 fi
 
@@ -85,7 +89,7 @@ addArg () {
 }
 
 # process command line args
-declare -a JVMARGS=("-classpath" "$PACMAN_CLASSES:$M2CAPSULE")
+declare -a JVMARGS=("-classpath" "$PACMAN_JAR:$M2CAPSULE")
 declare -a ARGS=("scaled.pacman.Pacman")
 while [[ $# -gt 0 ]]; do
     case "$1" in
