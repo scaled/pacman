@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
@@ -116,6 +117,12 @@ public class PackageBuilder {
   }
 
   protected void createJar (Path sourceDir, Path targetJar) throws IOException {
+    // if the old jar file exists, move it out of the way; this reduces the likelihood that we'll
+    // cause a JVM to crash by truncating and replacing a jar file out from under it
+    if (Files.exists(targetJar)) {
+      Path oldJar = targetJar.resolveSibling("old-"+targetJar.getFileName());
+      Files.move(targetJar, oldJar, StandardCopyOption.REPLACE_EXISTING);
+    }
     List<String> cmd = new ArrayList<>();
     cmd.add("jar");
     cmd.add("-cf");
