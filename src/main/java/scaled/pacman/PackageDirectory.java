@@ -41,13 +41,13 @@ public class PackageDirectory {
   public List<Entry> entries = new ArrayList<>();
   public Map<String,Entry> byName = new HashMap<>();
 
-  public void init (Log log, Path root) {
+  public void init (Path root) {
     Path pfile = root.resolve("packages");
     try {
       for (String line : Files.readAllLines(pfile)) {
         String[] bits = line.split(" ", 3);
         if (bits.length != 3) {
-          log.log("Invalid directory entry: " + line);
+          Log.log("Invalid directory entry: " + line);
           continue;
         }
         try {
@@ -55,12 +55,12 @@ public class PackageDirectory {
           entries.add(e);
           byName.put(e.name, e);
         } catch (URISyntaxException e) {
-          log.log("Invalid source:", "entry", line, "error", e);
+          Log.log("Invalid source:", "entry", line, "error", e);
           // skip it!
         }
       }
     } catch (IOException e) {
-      log.log("Error reading package directory", "file", pfile, e);
+      Log.log("Error reading package directory", "file", pfile, e);
     }
   }
 }

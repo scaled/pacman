@@ -35,7 +35,7 @@ public class Depends {
     Optional<Module> moduleBySource (Source source);
 
     /** Resolves the supplied Maven depends. */
-    List<Path> resolve (List<RepoId> ids);
+    Map<RepoId,Path> resolve (List<RepoId> ids);
 
     /** Resolves the supplied system depend. */
     Path resolve (SystemId id);
@@ -111,12 +111,11 @@ public class Depends {
       Set<Path> haveBinaryDeps = new HashSet<>();
       for (Depends dep : moduleDeps) dep.accumBinaryDeps(haveBinaryDeps);
 
-      for (Path path : resolve.resolve(mvnIds)) {
-        // (reverse engineer the RepoId from the paths returned by Capsule; I don't want to hack up
-        // Capsule to return other data and extracting Maven coordinates from file path isn't
-        // particularly fiddly)
-        RepoId id = RepoId.fromPath(path);
-        if (id != null && resolve.isShared(id)) sharedDeps.put(path, id);
+      for (Map.Entry<RepoId,Path> entry : resolve.resolve(mvnIds).entrySet()) {
+        RepoId id = entry.getKey();
+        Path path = entry.getValue();
+        if (path == null) missingDeps.add(new Depend.MissingId(id));
+        else if (resolve.isShared(id)) sharedDeps.put(path, id);
         else if (!haveBinaryDeps.contains(path)) binaryDeps.put(path, id);
       }
     }

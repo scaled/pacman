@@ -26,7 +26,7 @@ if [ -x "$PACMAN_SPAM" -a "$PACMAN_SPAM" != "$THIS_SPAM" ]; then
     exec "$PACMAN_SPAM" "$@"
 fi
 
-# download capsule if needed
+# download mfetcher if needed
 download() {
   local URL="$1"
   local FILE="$2"
@@ -44,10 +44,10 @@ download() {
   } && [[ -s "$FILE" ]]
 }
 declare M2REPO=$HOME/.m2/repository
-declare CAPSULE=co/paralleluniverse/capsule/0.5.0/capsule-0.5.0.jar
-declare M2CAPSULE=$M2REPO/$CAPSULE
-if [ ! -s $M2CAPSULE ]; then
-    download "http://central.maven.org/maven2/$CAPSULE" "$M2CAPSULE"
+declare MFETCHER=com/samskivert/mfetcher/1.0/mfetcher-1.0.jar
+declare M2MFETCHER=$M2REPO/$MFETCHER
+if [ ! -s $M2MFETCHER ]; then
+    download "http://central.maven.org/maven2/$MFETCHER" "$M2MFETCHER"
 fi
 
 # check out pacman package if needed
@@ -75,7 +75,7 @@ if [ ! -s "$PACMAN_JAR" ]; then
     mkdir -p target/classes
     find src/main/java -name '*.java' > target/pacman.sources
     echo "Compiling Scaled package manager..."
-    $JAVAC_CMD -classpath "$M2CAPSULE" -d target/classes @target/pacman.sources
+    $JAVAC_CMD -classpath "$M2MFETCHER" -d target/classes @target/pacman.sources
     cd target/classes
     jar -cf ../module.jar .
     popd
@@ -89,7 +89,7 @@ addArg () {
 }
 
 # process command line args
-declare -a JVMARGS=("-classpath" "$PACMAN_JAR:$M2CAPSULE")
+declare -a JVMARGS=("-classpath" "$PACMAN_JAR:$M2MFETCHER")
 declare -a ARGS=("scaled.pacman.Pacman")
 while [[ $# -gt 0 ]]; do
     case "$1" in

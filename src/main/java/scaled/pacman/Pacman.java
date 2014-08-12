@@ -77,10 +77,10 @@ public class Pacman {
         System.out.println("* Fetching Scaled package directory...");
         VCSDriver.get(Source.VCS.GIT).checkout(new URI(IDX_GIT_URL), idir);
       }
-      index.init(repo.log, idir);
+      index.init(idir);
     } catch (Exception e) {
-      repo.log.log("Error inititalizing package directory, 'search' and 'install' by name " +
-                   "are not going to work.", "error", e);
+      Log.log("Error inititalizing package directory, 'search' and 'install' by name " +
+              "are not going to work.", "error", e);
     }
   }
 

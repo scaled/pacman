@@ -17,9 +17,9 @@
 
   <dependencies>
     <dependency>
-      <groupId>co.paralleluniverse</groupId>
-      <artifactId>capsule</artifactId>
-      <version>0.5.0</version>
+      <groupId>com.samskivert</groupId>
+      <artifactId>mfetcher</artifactId>
+      <version>1.0</version>
     </dependency>
 
     <dependency>

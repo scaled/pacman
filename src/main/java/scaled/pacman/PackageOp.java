@@ -27,7 +27,7 @@ public class PackageOp {
       catch (IOException e) { e.printStackTrace(System.err); }
     }});
     PackageFetcher pf = new PackageFetcher(_repo, source, temp);
-    _repo.log.log("Cloning " + source + " into temp dir...");
+    Log.log("Cloning " + source + " into temp dir...");
     pf.checkout();
 
     // parse this package's depends and install those before building the package
@@ -35,12 +35,12 @@ public class PackageOp {
     installDepends(pkg);
 
     // now that the depends are built and installed, we can build this package
-    _repo.log.log("Building " + pkg.name + "...");
+    Log.log("Building " + pkg.name + "...");
     PackageBuilder pb = new PackageBuilder(_repo, pkg);
     pb.build();
 
     // all went well, we can now move the package into place
-    _repo.log.log("Installing " + source + " into Packages/" + pkg.name + "...");
+    Log.log("Installing " + source + " into Packages/" + pkg.name + "...");
     pf.install(pkg);
   }
 
@@ -51,7 +51,7 @@ public class PackageOp {
 
     // update the VCS clone of this package's source tree
     PackageFetcher pf = new PackageFetcher(_repo, pkg.source, pkg.root);
-    _repo.log.log("Updating " + pkg.source + "...");
+    Log.log("Updating " + pkg.source + "...");
     pf.update();
 
     // reparse this package's depends, install any new depends, upgrade any existing depends
@@ -59,7 +59,7 @@ public class PackageOp {
     Set<Source> npdeps = npkg.packageDepends();
     npdeps.removeAll(_upgraded);
     if (!npdeps.isEmpty()) {
-      _repo.log.log("Updating " + npdeps.size() + " pkgs on which " + npkg.name + " depends...");
+      Log.log("Updating " + npdeps.size() + " pkgs on which " + npkg.name + " depends...");
       installDepends(npkg);
     }
 
@@ -77,7 +77,7 @@ public class PackageOp {
         }
       }
       if (!updeps.isEmpty()) {
-        _repo.log.log("Upgrading " + updeps.size() + " pkgs which depend on " + npkg.name + "...");
+        Log.log("Upgrading " + updeps.size() + " pkgs which depend on " + npkg.name + "...");
         for (Package updep : updeps) upgrade(updep);
       }
     }

@@ -4,23 +4,54 @@
 
 package scaled.pacman;
 
-import capsule.DependencyManager;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import mfetcher.Coord;
+import mfetcher.DependencyManager;
+import impl.org.eclipse.aether.RepositoryEvent;
+import impl.org.eclipse.aether.transfer.TransferEvent;
 
 public class MavenResolver {
 
-  public final DependencyManager capsule =
-  new DependencyManager(RepoId.m2repo, null, false, false);
+  public final DependencyManager depmgr = new DependencyManager(RepoId.m2repo, null, false, false) {
+    @Override protected void onRepositoryEvent (String method, RepositoryEvent event) {
+      if (method.endsWith("Invalid") || method.endsWith("Missing")) {
+        Log.log("MavenResolver." + method + " " + event);
+      // } else if (method.equals("artifactResolved")) {
+      //   Log.log("MavenResolver." + method + " " + event);
+      }
+    }
+    @Override protected void onTransferEvent (String method, TransferEvent event) {
+      if (method.endsWith("Corrupted") || method.endsWith("Failed") ||
+          method.endsWith("Succeeded")) {
+        Log.log("MavenResolver." + method + " " + event);
+      }
+    }
+  };
 
-  public List<Path> resolve (List<RepoId> ids) {
-    List<String> coords = new ArrayList<>();
-    for (RepoId id : ids) coords.add(id.toCoord());
-    // filter the resolved depends through a linked hashset, which eliminates duplicates while
-    // preserving order
-    return new ArrayList<Path>(new LinkedHashSet<Path>(capsule.resolveDependencies(coords, "jar")));
+  public Map<RepoId,Path> resolve (RepoId id) {
+    return resolve(Arrays.asList(id));
+  }
+
+  public Map<RepoId,Path> resolve (List<RepoId> ids) {
+    List<Coord> coords = new ArrayList<>();
+    for (RepoId id : ids) coords.add(toCoord(id));
+    Map<RepoId,Path> results = new LinkedHashMap<>();
+    for (Map.Entry<Coord,Path> entry : depmgr.resolveDependencies(coords).entrySet()) {
+      results.put(toRepoId(entry.getKey()), entry.getValue());
+    }
+    return results;
+  }
+
+  private static Coord toCoord (RepoId id) {
+    return new Coord(id.groupId, id.artifactId, id.version, id.kind);
+  }
+
+  private static RepoId toRepoId (Coord coord) {
+    return new RepoId(coord.groupId, coord.artifactId, coord.version, coord.kind);
   }
 }

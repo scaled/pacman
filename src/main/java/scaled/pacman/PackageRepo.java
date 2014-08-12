@@ -38,13 +38,6 @@ public class PackageRepo {
   /** A hook for Scaled to observe package goings on. */
   public Observer observer;
 
-  /** A log instance whence logging is sent. This goes to stderr, unless/until Scaled takes over the
-    * JVM at which point it reroutes it to the *messages* buffer. */
-  public Log log = new Log() {
-    public void log (String msg) { System.err.println(msg); }
-    public void log (String msg, Throwable error) { log(msg); error.printStackTrace(System.err); }
-  };
-
   /** The top-level Scaled metadata directory. */
   public final Path metaDir = locateMetaDir();
 
@@ -52,7 +45,7 @@ public class PackageRepo {
   public final MavenResolver mvn = new MavenResolver();
 
   /** Used to resolve System artifacts. */
-  public final SystemResolver sys = new SystemResolver(log);
+  public final SystemResolver sys = new SystemResolver();
 
   /** Used to resolve dependencies. */
   public final Depends.Resolver resolver = new Depends.Resolver() {
@@ -60,7 +53,7 @@ public class PackageRepo {
       Package pkg = _pkgs.get(source.packageSource());
       return Optional.ofNullable(pkg == null ? null : pkg.module(source.module()));
     }
-    public List<Path> resolve (List<RepoId> ids) {
+    public Map<RepoId,Path> resolve (List<RepoId> ids) {
       return mvn.resolve(ids);
     }
     public Path resolve (SystemId id) {
@@ -140,14 +133,14 @@ public class PackageRepo {
       Package pkg = new Package(pkgFile);
       // log any errors noted when resolving this package info
       if (!pkg.errors.isEmpty()) {
-        log.log("ERRORS in " + pkg.root + "/package.scaled:");
-        for (String error : pkg.errors) log.log("- " + error);
+        Log.log("ERRORS in " + pkg.root + "/package.scaled:");
+        for (String error : pkg.errors) Log.log("- " + error);
       }
       _pkgs.put(pkg.source, pkg);
       if (observer != null) observer.packageAdded(pkg);
       return true;
     } catch (Exception e) {
-      log.log("Unable to process package: "+ pkgFile, e);
+      Log.log("Unable to process package: "+ pkgFile, e);
       return false;
     }
   }
@@ -160,7 +153,7 @@ public class PackageRepo {
       for (Depend dep : mod.depends) if (dep.isSource()) {
         Source psrc = ((Source)dep.id).packageSource();
         Package dpkg = _pkgs.get(psrc);
-        if (dpkg == null) log.log("Missing depend!", "mod", mod.source, "dep", dep.id);
+        if (dpkg == null) Log.log("Missing depend!", "mod", mod.source, "dep", dep.id);
         else addPackageDepends(pkgs, dpkg);
       }
     }

@@ -51,7 +51,7 @@ public class PackageBuilder {
   protected void build (Module mod) throws IOException {
     String what = mod.pkg.name;
     if (!mod.isDefault()) what += "#" + mod.name;
-    _repo.log.log("Building " + what + "...");
+    Log.log("Building " + what + "...");
 
     // clear out and (re)create (if needed), the build output directory
     Filez.deleteAll(mod.classesDir());
@@ -90,7 +90,7 @@ public class PackageBuilder {
 
     String scalacId = "org.scala-lang:scala-compiler:2.11.0";
     cmd.add("-cp");
-    cmd.add(classpathToString(_repo.mvn.resolve(Arrays.asList(RepoId.parse(scalacId)))));
+    cmd.add(classpathToString(_repo.mvn.resolve(RepoId.parse(scalacId)).values()));
     cmd.add("scala.tools.nsc.Main");
 
     cmd.add("-d"); cmd.add(mod.root.relativize(mod.classesDir()).toString());
@@ -150,7 +150,7 @@ public class PackageBuilder {
     return cp;
   }
 
-  protected String classpathToString (List<Path> paths) {
+  protected String classpathToString (Iterable<Path> paths) {
     String pathSep = System.getProperty("path.separator");
     StringBuilder sb = new StringBuilder();
     for (Path path : paths) {

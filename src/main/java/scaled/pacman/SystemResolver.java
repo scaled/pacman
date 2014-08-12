@@ -13,11 +13,6 @@ public class SystemResolver {
 
   public final Path jreHome = Paths.get(System.getProperty("java.home"));
   public final Path javaHome = jreHome.getParent();
-  public final Log log;
-
-  public SystemResolver (Log log) {
-    this.log = log;
-  }
 
   public Path resolve (SystemId id) {
     if (id.platform.equals("jdk")) {
