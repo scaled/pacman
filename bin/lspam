@@ -3,7 +3,7 @@
 # Runs Scaled package manager from its build directory. Mainly for testing.
 
 declare M2REPO=$HOME/.m2/repository
-declare MFETCHER=com/samskivert/mfetcher/1.0/mfetcher-1.0.jar
+declare MFETCHER=com/samskivert/mfetcher/1.0.1/mfetcher-1.0.1.jar
 declare M2MFETCHER=$M2REPO/$MFETCHER
 if [ ! -s $M2MFETCHER ]; then
     echo "Missing $M2MFETCHER"
