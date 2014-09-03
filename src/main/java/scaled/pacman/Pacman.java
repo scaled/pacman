@@ -20,22 +20,23 @@ import java.util.function.Consumer;
 /** The main command line entry point for the Scaled Package Manager. */
 public class Pacman {
 
-  public static String USAGE =
-    "Usage: spam <command>\n" +
-    "\n" +
-    "where <command> is one of:\n" +
-    "\n" +
-    "  list [--all]                         lists installed (or all) packages\n" +
-    "  search text                          lists all packages in directory which match text\n" +
-    "  refresh                              updates the package directory index\n" +
-    "  install [pkg-name | pkg-url]         installs package (by name or url) and its depends\n" +
-    "  upgrade [pkg-name]                   upgrades package and its depends\n" +
-    "  info [pkg-name | --all]              prints detailed info on pkg-name (or all packages)\n" +
-    "  deptree pkg-name                     prints depend tree for (all modules in) pkg-name\n" +
-    "  depends pkg-name#module              prints flattened depend list pkg-name#module\n" +
-    "  build pkg-name [--deps]              cleans and builds pkg-name (and depends if --deps)\n" +
-    "  clean pkg-name [--deps]              cleans pkg-name (and its depends if --deps)\n" +
-    "  run pkg-name#module class [arg ...]  runs class from pkg-name#module with args";
+  public static String[] USAGE = {
+    "Usage: spam <command>",
+    "",
+    "where <command> is one of:",
+    "",
+    "  list [--all]                         lists installed (or all) packages",
+    "  search text                          lists all packages in directory which match text",
+    "  refresh                              updates the package directory index",
+    "  install [pkg-name | pkg-url]         installs package (by name or url) and its depends",
+    "  upgrade [pkg-name]                   upgrades package and its depends",
+    "  info [pkg-name | --all]              prints detailed info on pkg-name (or all packages)",
+    "  deptree pkg-name                     prints depend tree for (all modules in) pkg-name",
+    "  depends pkg-name#module              prints flattened depend list pkg-name#module",
+    "  build pkg-name [--deps]              cleans and builds pkg-name (and depends if --deps)",
+    "  clean pkg-name [--deps]              cleans pkg-name (and its depends if --deps)",
+    "  run pkg-name#module class [arg ...]  runs class from pkg-name#module with args"
+  };
 
   public static final Printer out = new Printer(System.out);
   public static final PackageRepo repo = new PackageRepo();
@@ -52,20 +53,32 @@ public class Pacman {
     initIndex();
 
     // we'll introduce proper arg parsing later; for now KISS
-    switch (args[0]) {
-    case      "list": list(optarg(args, 1, "").equals("--all")); break;
-    case    "search": search(optarg(args, 1, "")); break;
-    case   "refresh": refresh(); break;
-    case   "install": install(args[1]); break;
-    case   "upgrade": upgrade(args[1]); break;
-    case      "info": info(args[1]); break;
-    case   "deptree": deptree(args[1]); break;
-    case   "depends": depends(args[1]); break;
-    case     "build": build(args[1], optarg(args, 2, "").equals("--deps")); break;
-    case     "clean": clean(args[1], optarg(args, 2, "").equals("--deps")); break;
-    case       "run": run(args[1], args[2], tail(args, 3)); break;
-    default: fail(USAGE); break;
+    try {
+      switch (args[0]) {
+        case    "list": list(optarg(args, 1, "").equals("--all")); break;
+        case  "search": search(optarg(args, 1, "")); break;
+        case "refresh": refresh(); break;
+        case "install": install(arg(args, 1)); break;
+        case "upgrade": upgrade(arg(args, 1)); break;
+        case    "info": info(arg(args, 1)); break;
+        case "deptree": deptree(arg(args, 1)); break;
+        case "depends": depends(arg(args, 1)); break;
+        case   "build": build(arg(args, 1), optarg(args, 2, "").equals("--deps")); break;
+        case   "clean": clean(arg(args, 1), optarg(args, 2, "").equals("--deps")); break;
+        case     "run": run(arg(args, 1), arg(args, 2), tail(args, 3)); break;
+        default: fail(USAGE); break;
+      }
+    } catch (MissingArgException mae) {
+      fail(usageFor(args[0]));
     }
+  }
+
+  private static String usageFor (String cmd) {
+    String prefix = "  " + cmd;
+    for (String usage : USAGE) {
+      if (usage.startsWith(prefix)) return "Usage: spam " + usage.substring(2);
+    }
+    return "Usage: spam " + cmd + " <usage unknown>";
   }
 
   private static final String IDX_GIT_URL = "https://github.com/scaled/scaledex.git";
@@ -242,6 +255,11 @@ public class Pacman {
     return strs;
   }
 
+  private static String arg (String[] args, int idx) {
+    if (args.length <= idx) throw new MissingArgException();
+    return args[idx];
+  }
+
   private static String optarg (String[] args, int idx, String defval) {
     return (args.length > idx) ? args[idx] : defval;
   }
@@ -252,8 +270,8 @@ public class Pacman {
     return rest;
   }
 
-  private static void fail (String msg) {
-    System.err.println(msg);
+  private static void fail (String... msgs) {
+    for (String msg : msgs) System.err.println(msg);
     System.exit(255);
   }
 
@@ -262,4 +280,6 @@ public class Pacman {
     cause.printStackTrace(System.err);
     System.exit(255);
   }
+
+  private static class MissingArgException extends RuntimeException {}
 }
