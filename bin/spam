@@ -44,7 +44,7 @@ download() {
   } && [[ -s "$FILE" ]]
 }
 declare M2REPO=$HOME/.m2/repository
-declare MFETCHER=com/samskivert/mfetcher/1.0.1/mfetcher-1.0.1.jar
+declare MFETCHER=com/samskivert/mfetcher/1.0.2/mfetcher-1.0.2.jar
 declare M2MFETCHER=$M2REPO/$MFETCHER
 if [ ! -s $M2MFETCHER ]; then
     download "http://central.maven.org/maven2/$MFETCHER" "$M2MFETCHER"
