@@ -145,7 +145,13 @@ public class PackageBuilder {
   }
 
   protected List<Path> buildClasspath (Module mod) {
-    List<Path> cp = mod.depends(_repo.resolver, false).classpath();
+    Depends deps = mod.depends(_repo.resolver, false);
+    if (!deps.missingDeps.isEmpty()) {
+      Log.log(mod + " has missing depends:");
+      for (Depend.MissingId id : deps.missingDeps) Log.log(id.toString());
+      throw new IllegalStateException(mod + " has missing depends");
+    }
+    List<Path> cp = deps.classpath();
     cp.remove(mod.classesDir());
     return cp;
   }
