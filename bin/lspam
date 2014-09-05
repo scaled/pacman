@@ -2,6 +2,8 @@
 #
 # Runs Scaled package manager from its build directory. Mainly for testing.
 
+set -e
+
 declare M2REPO=$HOME/.m2/repository
 declare MFETCHER=com/samskivert/mfetcher/1.0.2/mfetcher-1.0.2.jar
 declare M2MFETCHER=$M2REPO/$MFETCHER
