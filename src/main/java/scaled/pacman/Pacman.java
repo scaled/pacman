@@ -58,7 +58,7 @@ public class Pacman {
         case    "list": list(optarg(args, 1, "").equals("--all")); break;
         case  "search": search(optarg(args, 1, "")); break;
         case "refresh": refresh(); break;
-        case "install": install(arg(args, 1)); break;
+        case "install": install(tail(args, 1)); break;
         case "upgrade": upgrade(arg(args, 1)); break;
         case    "info": info(arg(args, 1)); break;
         case "deptree": deptree(arg(args, 1)); break;
@@ -131,16 +131,18 @@ public class Pacman {
     catch (Exception e) { fail("Refresh failed", e); }
   }
 
-  private static void install (String whence) {
-    // see if this is a known package name
-    PackageDirectory.Entry entry = index.byName.get(whence);
-    if (entry != null) install(entry.source);
-    // if this looks like a URL, try checking it out by URL
-    else if (whence.contains(":")) {
-      try { install(Source.parse(whence)); }
-      catch (Exception e) { fail("Cannot install '" + whence + "'", e); }
+  private static void install (String... whences) {
+    for (String whence : whences) {
+      // see if this is a known package name
+      PackageDirectory.Entry entry = index.byName.get(whence);
+      if (entry != null) install(entry.source);
+      // if this looks like a URL, try checking it out by URL
+      else if (whence.contains(":")) {
+        try { install(Source.parse(whence)); }
+        catch (Exception e) { fail("Cannot install '" + whence + "'", e); }
+      }
+      else fail("Unknown package '" + whence + "'");
     }
-    else fail("Unknown package '" + whence + "'");
   }
 
   private static void install (Source source) {
