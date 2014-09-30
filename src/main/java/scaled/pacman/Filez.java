@@ -36,6 +36,7 @@ public class Filez {
   /** Copies the contents of {@code fromDir} into {@code toDir} recursively.
     * The directory structure under {@code fromDir} is replicated into {@code toDir} as needed. */
   public static void copyAll (Path fromDir, Path toDir) throws IOException {
+    Files.createDirectories(toDir);
     Files.walkFileTree(fromDir, new SimpleFileVisitor<Path>() {
       @Override public FileVisitResult preVisitDirectory (Path dir, BasicFileAttributes attrs)
       throws IOException {
