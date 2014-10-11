@@ -69,7 +69,7 @@ public class PackageBuilder {
     // compile scala first in case there are java files that depend on scala's; scalac does some
     // fiddling to support mixed compilation but it doesn't generate bytecode for .javas
     if (scalaDir != null) buildScala(mod, scalaDir, javaDir);
-    if (javaDir != null) buildJava(mod, javaDir);
+    if (javaDir != null) buildJava(mod, javaDir, scalaDir != null);
     // TODO: support other languages
 
     // finally jar everything up
@@ -103,13 +103,17 @@ public class PackageBuilder {
     Exec.exec(mod.root, cmd).expect(0, "Scala build failed.");
   }
 
-  protected void buildJava (Module mod, Path javaDir) throws IOException {
+  protected void buildJava (Module mod, Path javaDir, boolean multiLang) throws IOException {
     List<String> cmd = new ArrayList<>();
     cmd.add(findJavaHome().resolve("bin").resolve("javac").toString());
 
     cmd.addAll(mod.pkg.jcopts);
-    cmd.add("-d"); cmd.add(mod.root.relativize(mod.classesDir()).toString());
+    Path target = mod.root.relativize(mod.classesDir());
+    cmd.add("-d"); cmd.add(target.toString());
     List<Path> cp = buildClasspath(mod);
+    // if we're compiling multiple languages, we need to add the target directory to our classpath
+    // because we may have Java source files that depend on classes compiled by the other language
+    if (multiLang) cp.add(0, target);
     if (!cp.isEmpty()) { cmd.add("-cp"); cmd.add(classpathToString(cp)); }
     addSources(mod.root, javaDir, ".java", cmd);
 
