@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 /** Contains runtime metadata for one of a package's modules. */
-public class Module implements Comparable<Module> {
+public class Module {
 
   /** The string {@code module.scaled} for all to share and enjoy. */
   public static String FILE = "module.scaled";
@@ -100,13 +100,6 @@ public class Module implements Comparable<Module> {
   public Path moduleJar () { return outputDir().resolve("module.jar"); }
 
   public Path classpath () { return Files.exists(moduleJar()) ? moduleJar() : classesDir(); }
-
-  // from interface Comparable
-  public int compareTo (Module other) {
-    if (localDepends.contains(other.name)) return 1;
-    else if (other.localDepends.contains(name)) return -1;
-    else return name.compareTo(other.name);
-  }
 
   @Override public String toString () {
     return pkg.name + "#" + name;

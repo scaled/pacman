@@ -7,9 +7,11 @@ package scaled.pacman;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,11 +39,30 @@ public class Package {
 
   public final List<String> errors;
 
-  /** Returns all modules contained in this packge. These are returned topologically sorted, such
-    * that any module which depends on another module in this package will show up later in the
-    * list than the module on which it depends. */
+  /** Returns all modules contained in this package. These are returned topologically sorted, such
+    * that any module which depends on another module in this package will show up later in the list
+    * than the module on which it depends. */
   public Iterable<Module> modules () {
-    return new TreeSet<>(_modules.values());
+    List<Module> mods = new ArrayList<>();
+    Set<String> seen = new HashSet<>();
+    List<Module> remain = new ArrayList<>(_modules.values());
+    // repeatedly loop through our remaining modules, adding any modules whose entire dependency
+    // set has been "seen"
+    while (!remain.isEmpty()) {
+      int had = remain.size();
+      for (Iterator<Module> iter = remain.iterator(); iter.hasNext(); ) {
+        Module mod = iter.next();
+        if (seen.containsAll(mod.localDepends)) {
+          seen.add(mod.name);
+          mods.add(mod);
+          iter.remove();
+        }
+      }
+      // if we haven't moved at least one module into the seen set, we're hosed
+      if (had == remain.size()) throw new IllegalStateException(
+          "Cyclic inter-module dependencies in package: " + remain);
+    }
+    return mods;
   }
 
   /** Returns the module with name {@code name} or null. */
