@@ -154,7 +154,7 @@ public class PackageRepo {
         Source psrc = ((Source)dep.id).packageSource();
         Package dpkg = _pkgs.get(psrc);
         if (dpkg == null) Log.log("Missing depend!", "mod", mod.source, "dep", dep.id);
-        else addPackageDepends(pkgs, dpkg);
+        else if (dpkg != pkg) addPackageDepends(pkgs, dpkg);
       }
     }
     // then add this package
