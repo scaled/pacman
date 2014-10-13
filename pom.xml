@@ -19,7 +19,7 @@
     <dependency>
       <groupId>com.samskivert</groupId>
       <artifactId>mfetcher</artifactId>
-      <version>1.0</version>
+      <version>1.0.4</version>
     </dependency>
 
     <dependency>
@@ -32,7 +32,7 @@
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
-      <version>2.11.0</version>
+      <version>2.11.4</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

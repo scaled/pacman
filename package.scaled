@@ -4,6 +4,6 @@ version: 1.0
 descrip: The Scaled Package Manager. Wakka wakka wakka.
  weburl: https://github.com/scaled/pacman/
 license: New BSD
- jcopts: -source 1.8 -target 1.8 -Xlint:all
- depend: mvn:com.samskivert:mfetcher:1.0
+ jcopts: -source 1.8 -target 1.8 -Xlint:all -Xlint:-serial
+ depend: mvn:com.samskivert:mfetcher:1.0.4
 testdep: mvn:junit:junit:4.11
