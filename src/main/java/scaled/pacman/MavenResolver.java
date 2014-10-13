@@ -48,10 +48,12 @@ public class MavenResolver {
   }
 
   private static Coord toCoord (RepoId id) {
-    return new Coord(id.groupId, id.artifactId, id.version, id.kind);
+    Coord coord = new Coord(id.groupId, id.artifactId, id.version, id.kind);
+    coord.classifier = id.classifier;
+    return coord;
   }
 
   private static RepoId toRepoId (Coord coord) {
-    return new RepoId(coord.groupId, coord.artifactId, coord.version, coord.kind);
+    return new RepoId(coord.groupId, coord.artifactId, coord.version, coord.kind, coord.classifier);
   }
 }
