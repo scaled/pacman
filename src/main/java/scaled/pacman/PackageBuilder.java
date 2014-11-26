@@ -88,7 +88,7 @@ public class PackageBuilder {
     List<String> cmd = new ArrayList<>();
     cmd.add(findJavaHome().resolve("bin").resolve("java").toString());
 
-    String scalacId = "org.scala-lang:scala-compiler:2.11.0";
+    String scalacId = "org.scala-lang:scala-compiler:2.11.4";
     cmd.add("-cp");
     cmd.add(classpathToString(_repo.mvn.resolve(RepoId.parse(scalacId)).values()));
     cmd.add("scala.tools.nsc.Main");
