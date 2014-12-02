@@ -163,7 +163,7 @@ public class PackageRepo {
 
   private Path locateMetaDir () {
     // if our metadir has been overridden, use the specified value
-    String root = System.getProperty("scaled.meta");
+    String root = System.getenv("SCALED_HOME");
     if (root != null) return Paths.get(root);
 
     Path homeDir = Paths.get(System.getProperty("user.home"));
