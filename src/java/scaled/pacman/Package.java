@@ -95,20 +95,21 @@ public class Package {
     scopts  = cfg.resolve("scopt",  Config.StringListP);
     scopts.addAll(cfg.resolve("scopts", Config.WordsP));
     depends = cfg.resolveDepends();
-
-    // if no modules were defined, create the default module using an empty config
     List<String> mods = cfg.resolve("module", Config.StringListP);
-    if (mods.isEmpty()) {
-      _modules.put(Module.DEFAULT, new Module(
-        this, Module.DEFAULT, root, source, new Config(Collections.emptyList())));
-    }
 
     // we're done with the package config, so accumulate any errors
     errors = cfg.finish();
 
+    // if we have a top-level source directory, add the default module
+    if (Files.exists(root.resolve("src"))) {
+      _modules.put(Module.DEFAULT, new Module(
+        this, Module.DEFAULT, root, source, new Config(Collections.emptyList())));
+    }
+
     // this will noop if no modules were defined, but we structure the code this way because we need
     // errors to be initialized before we parse our module configs
     for (String mname : mods) {
+      // the default module is rooted at the top of the package tree
       Path mroot = root.resolve(mname);
       try {
         Config mcfg = new Config(Files.readAllLines(mroot.resolve("module.scaled")));

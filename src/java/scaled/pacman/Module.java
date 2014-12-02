@@ -49,7 +49,7 @@ public class Module {
     this.root = root;
     this.source = source;
     this.depends = cfg.resolveDepends();
-    this.depends.addAll(pkg.depends); // inherit our package depends
+    if (isDefault()) depends.addAll(pkg.depends); // inherit our package depends
 
     // compute our local depends
     for (Depend dep : depends) {
@@ -59,7 +59,7 @@ public class Module {
     }
   }
 
-  /** Returns true if this is the default module in a single-module package, false otherwise. */
+  /** Returns true if this is the default module in a package, false otherwise. */
   public boolean isDefault () {
     return name == DEFAULT;
   }
@@ -69,23 +69,18 @@ public class Module {
     return pkg.source.equals(source.packageSource());
   }
 
-  public Depends depends (Depends.Resolver resolve, boolean forTest) {
-    if (forTest) {
-      if (_testDepends == null) _testDepends = new Depends(this, resolve, true);
-      return _testDepends;
-    } else {
-      if (_depends == null) _depends = new Depends(this, resolve, false);
-      return _depends;
-    }
+  public Depends depends (Depends.Resolver resolve) {
+    if (_depends == null) _depends = new Depends(this, resolve);
+    return _depends;
   }
 
   /** Returns a class loader for loading classes from this module and its depends. */
   public ModuleLoader loader (Depends.Resolver resolve) {
-    if (_loader == null) _loader = new ModuleLoader(resolve, depends(resolve, false));
+    if (_loader == null) _loader = new ModuleLoader(resolve, depends(resolve));
     return _loader;
   }
 
-  public Path mainDir () { return root.resolve("src").resolve("main"); }
+  public Path mainDir () { return root.resolve("src"); }
   public Map<String,Path> sourceDirs () throws IOException {
     Map<String,Path> dirs = new HashMap<>();
     Files.list(mainDir()).forEach(dir -> {
@@ -106,5 +101,5 @@ public class Module {
   }
 
   private ModuleLoader _loader;
-  private Depends _depends, _testDepends;
+  private Depends _depends;
 }

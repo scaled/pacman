@@ -6,4 +6,4 @@ descrip: The Scaled Package Manager. Wakka wakka wakka.
 license: New BSD
  jcopts: -source 1.8 -target 1.8 -Xlint:all -Xlint:-serial
  depend: mvn:com.samskivert:mfetcher:1.0.5
-testdep: mvn:junit:junit:4.11
+ module: test

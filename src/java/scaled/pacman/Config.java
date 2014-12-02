@@ -102,7 +102,6 @@ public class Config {
 
   public List<Depend> resolveDepends () {
     List<Depend> depends = resolve("depend", new DependListP(Depend.Scope.MAIN));
-    depends.addAll(resolve("testdep", new DependListP(Depend.Scope.TEST)));
     depends.addAll(resolve("execdep", new DependListP(Depend.Scope.EXEC)));
     return depends;
   }

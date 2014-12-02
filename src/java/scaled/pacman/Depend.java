@@ -22,17 +22,8 @@ public class Depend {
   }
 
   public static enum Scope {
-    MAIN {
-      public boolean include (boolean testScope) { return true; }
-    },
-    TEST {
-      public boolean include (boolean testScope) { return testScope; }
-    },
-    EXEC {
-      public boolean include (boolean testScope) { return false; }
-    };
-
-    public abstract boolean include (boolean testScope);
+    MAIN,
+    EXEC;
   }
 
   /** Parses a string representation of a [[Depend]]. */

@@ -58,9 +58,6 @@ public class Depends {
   /** The module whose dependencies we contain. */
   public final Module mod;
 
-  /** The scope at which these dependencies were resolved (main or test). */
-  public final Depend.Scope scope;
-
   /** The binary dependencies for this module, mapped to the {@link Depend.Id} from which they were
     * resolved (if any). A dependency will map to {@code null} if it is a transitive Maven
     * dependency that somehow resolved to a path which could not be reverse engineered back to a
@@ -77,9 +74,8 @@ public class Depends {
   /** Contains any declared source dependencies that could not be resolved. */
   public final List<Depend.MissingId> missingDeps;
 
-  public Depends (Module module, Resolver resolve, boolean testScope) {
+  public Depends (Module module, Resolver resolve) {
     this.mod = module;
-    this.scope = testScope ? Depend.Scope.TEST : Depend.Scope.MAIN;
     this.sharedDeps = new HashMap<>();
     // use a linked hash map because we need to preserve iteration order for bindeps
     this.binaryDeps = new LinkedHashMap<>();
@@ -89,7 +85,7 @@ public class Depends {
     List<RepoId> mvnIds = new ArrayList<>();
     List<SystemId> sysIds = new ArrayList<>();
     for (Depend dep : module.depends) {
-      if (!dep.scope.include(testScope)) continue; // skip depends that don't match our scope
+      if (dep.scope == Depend.Scope.EXEC) continue; // omit exec depends
       if (dep.id instanceof RepoId) mvnIds.add((RepoId)dep.id);
       else if (dep.id instanceof SystemId) sysIds.add((SystemId)dep.id);
       else {
@@ -99,7 +95,7 @@ public class Depends {
         // resolved even though the package itself is not yet registered with this repo
         Optional<Module> dmod = !module.isSibling(depsrc) ? resolve.moduleBySource(depsrc) :
           Optional.ofNullable(module.pkg.module(depsrc.module()));
-        if (dmod.isPresent()) moduleDeps.add(dmod.get().depends(resolve, testScope));
+        if (dmod.isPresent()) moduleDeps.add(dmod.get().depends(resolve));
         else missingDeps.add(new Depend.MissingId(dep.id));
       }
     }

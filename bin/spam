@@ -76,7 +76,7 @@ if [ ! -s "$PACMAN_JAR" ]; then
     pushd "$PACMAN_ROOT" >/dev/null
     rm -rf target/classes
     mkdir -p target/classes
-    find src/main/java -name '*.java' > target/pacman.sources
+    find src/java -name '*.java' > target/pacman.sources
     echo "[Compiling Scaled package manager...]"
     $JAVAC_CMD -classpath "$M2MFETCHER" -d target/classes @target/pacman.sources
     cd target/classes
