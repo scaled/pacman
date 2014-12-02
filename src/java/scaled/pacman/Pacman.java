@@ -186,14 +186,14 @@ public class Pacman {
   private static void deptree (String pkgName) {
     onPackage(pkgName, pkg -> {
       for (Module mod : pkg.modules()) {
-        mod.depends(repo.resolver, false).dump(System.out, "", new HashSet<>());
+        mod.depends(repo.resolver).dump(System.out, "", new HashSet<>());
       }
     });
   }
 
   private static void depends (String pkgMod) {
     onModule(pkgMod, mod -> {
-      for (Depend.Id id : mod.depends(repo.resolver, false).flatten()) {
+      for (Depend.Id id : mod.depends(repo.resolver).flatten()) {
         out.println(id);
       }
     });

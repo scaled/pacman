@@ -149,7 +149,7 @@ public class PackageBuilder {
   }
 
   protected List<Path> buildClasspath (Module mod) {
-    Depends deps = mod.depends(_repo.resolver, false);
+    Depends deps = mod.depends(_repo.resolver);
     if (!deps.missingDeps.isEmpty()) {
       Log.log(mod + " has missing depends:");
       for (Depend.MissingId id : deps.missingDeps) Log.log(id.toString());
