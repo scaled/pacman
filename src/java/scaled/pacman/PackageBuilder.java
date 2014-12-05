@@ -161,17 +161,16 @@ public class PackageBuilder {
   }
 
   protected String classpathToString (Iterable<Path> paths) {
-    String pathSep = System.getProperty("path.separator");
     StringBuilder sb = new StringBuilder();
     for (Path path : paths) {
-      if (sb.length() > 0) sb.append(pathSep);
+      if (sb.length() > 0) sb.append(Props.pathSep);
       sb.append(path);
     }
     return sb.toString();
   }
 
   protected Path findJavaHome () throws IOException {
-    Path jreHome = Paths.get(System.getProperty("java.home"));
+    Path jreHome = Paths.get(Props.javaHome);
     Path javaHome = jreHome.getParent();
     if (isJavaHome(javaHome)) return javaHome;
     if (isJavaHome(jreHome)) return jreHome;

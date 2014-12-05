@@ -10,11 +10,11 @@ import org.junit._
 
 class ExecTest {
 
-  val cwd = Paths.get(System.getProperty("user.dir"))
+  val cwd = Paths.get(Props.cwd)
 
   @Test def testOutput () {
-    val out = Exec.exec(cwd, "echo", "peanut").output();
-    assertEquals(1, out.size());
-    assertEquals("peanut", out.get(0));
+    val out = Exec.exec(cwd, "echo", "peanut").output()
+    assertEquals(1, out.size)
+    assertEquals("peanut", out.get(0))
   }
 }

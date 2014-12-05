@@ -163,10 +163,9 @@ public class PackageRepo {
 
   private Path locateMetaDir () {
     // if our metadir has been overridden, use the specified value
-    String root = System.getenv("SCALED_HOME");
-    if (root != null) return Paths.get(root);
+    if (Props.scaledHome != null) return Paths.get(Props.scaledHome);
 
-    Path homeDir = Paths.get(System.getProperty("user.home"));
+    Path homeDir = Paths.get(Props.userHome);
     // if we're on a Mac, put things in ~/Library/Application Support/Scaled
     Path appSup = homeDir.resolve("Library").resolve("Application Support");
     if (Files.exists(appSup)) return appSup.resolve("Scaled");

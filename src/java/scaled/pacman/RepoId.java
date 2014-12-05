@@ -12,8 +12,7 @@ import java.util.Objects;
 /** Identifies a Maven dependency. */
 public class RepoId implements Depend.Id {
 
-  public static final Path m2repo = Paths.get(
-    System.getProperty("user.home")).resolve(".m2").resolve("repository");
+  public static final Path m2repo = Paths.get(Props.userHome).resolve(".m2").resolve("repository");
 
   // parses a repo depend: groupId:artifactId:version:kind
   public static RepoId parse (String text) {

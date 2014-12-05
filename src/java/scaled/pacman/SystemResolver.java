@@ -11,7 +11,7 @@ import java.util.List;
 
 public class SystemResolver {
 
-  public final Path jreHome = Paths.get(System.getProperty("java.home"));
+  public final Path jreHome = Paths.get(Props.javaHome);
   public final Path javaHome = jreHome.getParent();
 
   public Path resolve (SystemId id) {
