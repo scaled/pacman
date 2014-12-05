@@ -17,6 +17,8 @@ public class Props {
 
   public static final String scaledHome = System.getenv("SCALED_HOME");
 
+  public static final boolean ignoreModuleJar = Boolean.valueOf("pacman.ignore_module_jar");
+
   public static String cwd () {
     return System.getProperty("user.dir");
   }
