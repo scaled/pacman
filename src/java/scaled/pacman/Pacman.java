@@ -148,7 +148,7 @@ public class Pacman {
   private static void install (Source source) {
     if (repo.packageBySource(source).isPresent()) fail(
       "Package already installed: " + source + "\n" +
-      "Use 'spam update' to update the package if desired.");
+      "Use 'spam upgrade' to upgrade the package if desired.");
     try {
       new PackageOp(repo).install(source);
       out.println("Installation complete!");
