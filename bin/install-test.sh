@@ -6,11 +6,10 @@ BIN=`dirname $0`
 ROOT=`cd $BIN/.. ; pwd`
 
 TARGET=$ROOT/target
-TESTDIR=$TARGET/test-spam
+export SCALED_HOME=$TARGET/test-spam
 
 # clean out and (re)create the test dir
-rm -rf $TESTDIR
-mkdir -p $TESTDIR
+rm -rf $SCALED_HOME
+mkdir -p $SCALED_HOME
 
-LSPAM="$BIN/lspam -d -Dscaled.meta=$TESTDIR"
-$LSPAM install scaled
+java -classpath $TARGET/classes scaled.pacman.Bootstrap -d install scaled
