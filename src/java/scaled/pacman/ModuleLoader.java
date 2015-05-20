@@ -31,7 +31,11 @@ public class ModuleLoader extends URLClassLoader {
   }
 
   public ModuleLoader (Depends.Resolver resolve, Depends depends) {
-    super(toURLs(depends.mod.classpath(), depends.binaryDeps.keySet()));
+    super(toURLs(depends.mod.classpath(), depends.binaryDeps.keySet()),
+          // we need to explicitly pass our classloader as the parent, as the system classloader
+          // contains just the pacman bootstrap code, but we need pacman (and mfetcher) to be in the
+          // classloader chain because the alternative is classloader madness
+          ModuleLoader.class.getClassLoader());
     this.source = depends.mod.source;
     this.delegates = new ClassLoader[depends.sharedDeps.size()+depends.moduleDeps.size()];
     int ii = 0;
