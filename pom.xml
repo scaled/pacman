@@ -53,6 +53,23 @@
       </plugin>
 
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.6</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>scaled.pacman.Bootstrap</mainClass>
+            </manifest>
+          </archive>
+          <includes>
+            <include>**/Bootstrap**</include>
+            <include>**/Filez**</include>
+          </includes>
+        </configuration>
+      </plugin>
+
+      <plugin>
         <groupId>org.scala-tools</groupId>
         <artifactId>maven-scala-plugin</artifactId>
         <version>2.15.2</version>
