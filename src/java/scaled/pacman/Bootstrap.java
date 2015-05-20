@@ -27,8 +27,7 @@ import java.util.List;
  * Ensures that the {@code mfetcher} jar file is downloaded, Pacman is checked out and built, sets
  * up a classpath, then invokes the {@link Pacman} tool. This class takes care not to reference any
  * {@code Pacman} classes so that it can upgrade and build the Pacman code and subsequently run it
- * without linker madness. Note: it does reference {@link Filez} which could conceivably cause
- * problems, but we're going to take that risk in the name of avoiding senseless code duplication.
+ * without linker madness.
  */
 public class Bootstrap {
 
@@ -190,10 +189,9 @@ public class Bootstrap {
     Path pacmanJar = pacmanRoot.resolve("target").resolve("module.jar");
     if (Files.exists(pacmanJar)) return pacmanJar;
 
-    // otherwise create (if needed) and clear out the build directory
+    // create our build and classes directories (if needed)
     Path targetDir = pacmanRoot.resolve("target");
     Path classesDir = targetDir.resolve("classes");
-    Filez.deleteAll(classesDir);
     Files.createDirectories(classesDir);
 
     // enumerate all source files in src/java into target/pacman.sources

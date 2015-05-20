@@ -12,10 +12,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
 
-/**
- * File utilities. NOTE: this code is used by {@link Bootstrap} and thus should not reference
- * anything other than Java SDK classes.
- */
+/** File utilities. */
 public class Filez {
 
   /** Deletes {@code dir} and all of its contents. */

@@ -64,7 +64,6 @@
           </archive>
           <includes>
             <include>**/Bootstrap**</include>
-            <include>**/Filez**</include>
           </includes>
         </configuration>
       </plugin>
