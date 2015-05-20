@@ -21,7 +21,7 @@ public class Exec {
   public static class Handle {
     public int waitFor () throws IOException {
       _pb.inheritIO();
-      Process p=  _pb.start();
+      Process p = _pb.start();
       try { return p.waitFor(); }
       catch (InterruptedException e) { throw new IOException("Process.waitFor() interrupted"); }
     }
