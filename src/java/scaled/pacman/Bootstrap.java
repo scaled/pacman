@@ -242,6 +242,7 @@ public class Bootstrap {
   static void download (URI remote, Path local) throws IOException {
     note("Downloading " + remote);
     note("  into " + local);
+    Files.createDirectories(local.getParent());
     try (InputStream in = remote.toURL().openStream()) {
       Files.copy(in, local, StandardCopyOption.REPLACE_EXISTING);
     }
