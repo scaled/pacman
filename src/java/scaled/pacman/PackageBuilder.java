@@ -178,7 +178,8 @@ public class PackageBuilder {
   }
 
   protected boolean isJavaHome (Path javaHome) {
-    return Files.exists(javaHome.resolve("bin").resolve("java"));
+    Path binDir = javaHome.resolve("bin");
+    return Files.exists(binDir.resolve("java")) || Files.exists(binDir.resolve("java.exe"));
   }
 
   protected final PackageRepo _repo;
