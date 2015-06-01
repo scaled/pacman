@@ -185,6 +185,13 @@ public class Bootstrap {
   }
 
   static Path buildPacman (Path pacmanRoot, Path mfetcherJar) throws IOException {
+    // we repeat ourselves here, because we don't want to trigger init of Props class
+    if (Boolean.getBoolean("pacman.ignore_module_jar")) {
+      // if we're not using module.jar files, just assume Pacman is built and ready to run
+      debug("Using pacman/target/classes instead of module.jar, per request.");
+      return pacmanRoot.resolve("target").resolve("classes");
+    }
+
     // if we already have a built jar file, then we're good to go
     Path pacmanJar = pacmanRoot.resolve("target").resolve("module.jar");
     if (Files.exists(pacmanJar)) return pacmanJar;
