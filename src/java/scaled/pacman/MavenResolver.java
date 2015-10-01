@@ -41,8 +41,13 @@ public class MavenResolver {
     List<Coord> coords = new ArrayList<>();
     for (RepoId id : ids) coords.add(toCoord(id));
     Map<RepoId,Path> results = new LinkedHashMap<>();
-    for (Map.Entry<Coord,Path> entry : depmgr.resolveDependencies(coords).entrySet()) {
-      results.put(toRepoId(entry.getKey()), entry.getValue());
+    try {
+      for (Map.Entry<Coord,Path> entry : depmgr.resolveDependencies(coords).entrySet()) {
+        results.put(toRepoId(entry.getKey()), entry.getValue());
+      }
+    } catch (Throwable t) {
+      Log.log("MavenResolver.resolve: dependency manager failure",
+              "ids", ids, "coords", coords, t);
     }
     return results;
   }
