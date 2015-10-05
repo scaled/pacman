@@ -17,21 +17,21 @@ SPAM=`cd target/spam ; pwd`
 rm -rf $SPAM/*
 cd $SPAM
 
-# download the spam script
-rm -f spam
-wget https://raw.githubusercontent.com/scaled/pacman/master/bin/spam
-chmod a+rx spam
+# download the spam tool
+rm -f scaled-pacman.jar
+wget http://scaled.github.io/scaled-pacman.jar
+RUNSPAM="java -jar $SPAM/scaled-pacman.jar -d"
 
 export SCALED_HOME=$SPAM
 
 # install/build the package
-$SPAM/spam -d install $PKGURL
+$RUNSPAM install $PKGURL
 
 # then run our tests if we have any
 TESTDIR=$SPAM/Packages/$PACKAGE/test
 if [ -d $TESTDIR ]; then
   cd $TESTDIR
-  $SPAM/spam -d run $PACKAGE#test org.junit.runner.JUnitCore \
+  $RUNSPAM run $PACKAGE#test org.junit.runner.JUnitCore \
     `find target/classes -name '*Test.class' | \
      sed 's:target/classes/::' | sed 's:.class::' | sed 's:/:.:g'`
 else
