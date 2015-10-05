@@ -228,7 +228,12 @@ public class Pacman {
   private static void run (String pkgMod, String classname, String[] args) {
     onModule(pkgMod, mod -> {
       try {
-        Class<?> clazz = mod.loader(repo.resolver).loadClass(classname);
+        ModuleLoader loader = mod.loader(repo.resolver);
+        if (Props.debug) {
+          debug("Running " + pkgMod + " " + classname + " " + Arrays.asList(args));
+          loader.dump("  ");
+        }
+        Class<?> clazz = loader.loadClass(classname);
         clazz.getMethod("main", String[].class).invoke(null, (Object)args);
       } catch (Exception e) {
         e.printStackTrace(System.err);
@@ -271,6 +276,8 @@ public class Pacman {
     System.arraycopy(args, from, rest, 0, rest.length);
     return rest;
   }
+
+  static void debug (String message) { if (Props.debug) System.err.println("▸ " + message); }
 
   private static void fail (String... msgs) {
     for (String msg : msgs) System.err.println(msg);

@@ -16,8 +16,6 @@ import java.util.List;
  */
 public class Exec {
 
-  public static boolean DEBUG = Boolean.getBoolean("debug");
-
   public static class Handle {
     public int waitFor () throws IOException {
       _pb.inheritIO();
@@ -50,7 +48,7 @@ public class Exec {
   }
 
   public static Handle exec (Path cwd, String... cmd) throws IOException {
-    if (DEBUG) {
+    if (Props.debug) {
       System.out.println("Exec in " + cwd);
       System.out.println("  " + cmd[0]);
       boolean cont = false;

@@ -19,6 +19,8 @@ public class Props {
 
   public static final boolean ignoreModuleJar = Boolean.getBoolean("pacman.ignore_module_jar");
 
+  public static final boolean debug = Boolean.getBoolean("debug");
+
   public static String cwd () {
     return System.getProperty("user.dir");
   }

@@ -10,6 +10,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -41,6 +42,24 @@ public class ModuleLoader extends URLClassLoader {
     int ii = 0;
     for (Path path : depends.sharedDeps.keySet()) delegates[ii++] = resolve.sharedLoader(path);
     for (Depends dep : depends.moduleDeps) delegates[ii++] = dep.mod.loader(resolve);
+  }
+
+  public void dump (String depth) {
+    System.out.println(depth + this);
+    depth += " ";
+    for (URL url : getURLs()) {
+      System.out.println(depth + url);
+    }
+    for (ClassLoader delegate : delegates) {
+      if (delegate instanceof ModuleLoader) {
+        ((ModuleLoader)delegate).dump(depth);
+      } else if (delegate instanceof URLClassLoader) {
+        URLClassLoader ul = (URLClassLoader)delegate;
+        System.out.println(depth + "URLClassLoader(" + Arrays.asList(ul.getURLs()) + ")");
+      } else {
+        System.out.println(depth + delegate);
+      }
+    }
   }
 
   @Override public URL getResource (String path) {
