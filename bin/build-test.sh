@@ -18,7 +18,7 @@ cd $SPAM
 # download the spam tool
 rm -f scaled-pacman.jar
 wget http://scaled.github.io/scaled-pacman.jar
-RUNSPAM="java -jar $SPAM/scaled-pacman.jar -d"
+RUNSPAM="java -jar $SPAM/scaled-pacman.jar" # -d omitted for now
 
 export SCALED_HOME=$SPAM
 
