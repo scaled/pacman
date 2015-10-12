@@ -22,15 +22,16 @@ RUNSPAM="java -jar $SPAM/scaled-pacman.jar" # -d omitted for now
 
 export SCALED_HOME=$SPAM
 
-while [ ! -z "$1" ]; do
-  # install/build the package
-  PKGURL=$1
-  PACKAGE=`basename $PKGURL .git`
-  $RUNSPAM install $PKGURL
+# install all of the packages
+echo "*** Installing: $*"
+$RUNSPAM install "$@"
 
-  # then run our tests if we have any
+# then run the tests for each package, if we have any
+while [ ! -z "$1" ]; do
+  PACKAGE=`basename $1 .git`
   TESTDIR=$SPAM/Packages/$PACKAGE/test
   if [ -d $TESTDIR ]; then
+    echo "*** Running tests in $PACKAGE..."
     cd $TESTDIR
     $RUNSPAM run $PACKAGE#test org.junit.runner.JUnitCore \
       `find target/classes -name '*Test.class' | \
