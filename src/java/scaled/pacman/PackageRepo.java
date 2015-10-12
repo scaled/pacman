@@ -59,18 +59,18 @@ public class PackageRepo {
     public Path resolve (SystemId id) {
       return sys.resolve(id);
     }
-    public boolean isShared (RepoId id) {
-      Set<String> arts = SHARED_DEPS.get(id.groupId);
+    public boolean isSystem (RepoId id) {
+      Set<String> arts = SYSTEM_DEPS.get(id.groupId);
       return (arts != null) && arts.contains(id.artifactId);
     }
-    public ClassLoader sharedLoader (Path path) {
-      ClassLoader cl = _sharedLoaders.get(path);
-      if (cl == null) _sharedLoaders.put(
+    public ClassLoader systemLoader (Path path) {
+      ClassLoader cl = _systemLoaders.get(path);
+      if (cl == null) _systemLoaders.put(
         path, cl = new URLClassLoader(new URL[] { ModuleLoader.toURL(path) }));
       return cl;
     }
 
-    private Map<Path,ClassLoader> _sharedLoaders = new HashMap<>();
+    private Map<Path,ClassLoader> _systemLoaders = new HashMap<>();
   };
 
   /** Creates (if necessary) and returns a directory in the top-level Scaled metadata directory. */
@@ -185,8 +185,8 @@ public class PackageRepo {
   // classloader lest everything blow up when another module tries to use two or more of the
   // duplicators; right now only scala-library meets this criterion, but other depends will likely
   // join this club once we better support other JVM languages
-  private static final Map<String,Set<String>> SHARED_DEPS = new HashMap<>();
+  private static final Map<String,Set<String>> SYSTEM_DEPS = new HashMap<>();
   static {
-    SHARED_DEPS.put("org.scala-lang", new HashSet<String>(Arrays.asList("scala-library")));
+    SYSTEM_DEPS.put("org.scala-lang", new HashSet<String>(Arrays.asList("scala-library")));
   }
 }

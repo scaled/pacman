@@ -40,19 +40,19 @@ public class Depends {
     /** Resolves the supplied system depend. */
     Path resolve (SystemId id);
 
-    /** Returns true if {@code path} represents a shared dependency. This is a primitive mechanism
+    /** Returns true if {@code path} represents a system dependency. This is a primitive mechanism
       * to allow certain (non-module) dependencies to be shared in the runtime classloader graph
       * because that dependency's types show up in the public API of unrelated modules. The
       * canonical example of such a dependency is {@code org.scala-lang:scala-library}.
       *
-      * <p>One limitation of this system is that shared dependencies cannot themselves have
+      * <p>One limitation of this system is that system dependencies cannot themselves have
       * dependencies. This sufficies for our purposes thus far and keeps the lid on an unpleasantly
       * large and wiggly can of worms.</p>
       */
-    boolean isShared (RepoId id);
+    boolean isSystem (RepoId id);
 
-    /** Returns the classloader for the specified shared dependency. */
-    ClassLoader sharedLoader (Path path);
+    /** Returns the classloader for the specified system dependency. */
+    ClassLoader systemLoader (Path path);
   }
 
   /** The module whose dependencies we contain. */
@@ -64,9 +64,15 @@ public class Depends {
     * Maven dependency. */
   public final Map<Path,Depend.Id> binaryDeps;
 
-  /** The shared dependencies for this module, mapped to the {@link Depend.Id} from which they were
-    * resolved (if any). See {@link #binaryDeps} for caveats on this mapping. */
-  public final Map<Path,Depend.Id> sharedDeps;
+  /** The system dependencies for this module, mapped to the {@link Depend.Id} from which they were
+    * resolved (if any). A dependency will map to {@code null} if it is a transitive Maven
+    * dependency that somehow resolved to a path which could not be reverse engineered back to a
+    * Maven dependency. */
+  public final Map<Path,Depend.Id> systemDeps;
+
+  /** Direct dependencies that were filtered from this module because they were already exported as a
+    * transitive dependency of one of our other direct dependencies. */
+  public final Map<Path,Depend.Id> filteredDeps;
 
   /** The module dependencies for this module. */
   public final List<Depends> moduleDeps;
@@ -76,9 +82,10 @@ public class Depends {
 
   public Depends (Module module, Resolver resolve) {
     this.mod = module;
-    this.sharedDeps = new HashMap<>();
+    this.systemDeps = new HashMap<>();
     // use a linked hash map because we need to preserve iteration order for bindeps
     this.binaryDeps = new LinkedHashMap<>();
+    this.filteredDeps = new HashMap<>();
     this.moduleDeps = new ArrayList<>();
     this.missingDeps = new ArrayList<>();
 
@@ -100,33 +107,41 @@ public class Depends {
       }
     }
 
-    // resolve our Maven depends; split them into shared and (private) bindeps
-    if (!mvnIds.isEmpty()) {
-      // compute the transitive set of binary depends already handled by our module dependencies;
-      // we'll omit those from our binary deps because we want to "inherit" them
-      Set<Path> haveBinaryDeps = new HashSet<>();
-      for (Depends dep : moduleDeps) dep.accumBinaryDeps(haveBinaryDeps);
+    // compute the transitive set of binary and system depends already handled by our module
+    // dependencies; we'll omit those from our deps because we want to "inherit" them
+    Set<Path> haveBinaryDeps = new HashSet<>();
+    Set<String> haveSystemDeps = new HashSet<>();
+    for (Depends dep : moduleDeps) dep.accumDeps(haveBinaryDeps, haveSystemDeps);
 
+    // resolve our Maven depends; split them into system and (private) bindeps
+    if (!mvnIds.isEmpty()) {
       for (Map.Entry<RepoId,Path> entry : resolve.resolve(mvnIds).entrySet()) {
         RepoId id = entry.getKey();
         Path path = entry.getValue();
         if (path == null) missingDeps.add(new Depend.MissingId(id));
-        else if (resolve.isShared(id)) sharedDeps.put(path, id);
+        else if (resolve.isSystem(id)) {
+          if (!haveSystemDeps.contains(id.stableId())) systemDeps.put(path, id);
+          else filteredDeps.put(path, id);
+        }
         else if (!haveBinaryDeps.contains(path)) binaryDeps.put(path, id);
+        else filteredDeps.put(path, id);
       }
     }
 
-    // resolve our System depends; system depends are always shared
-    for (SystemId sysId : sysIds) try {
-      sharedDeps.put(resolve.resolve(sysId), sysId);
+    // resolve our System depends; system depends are always system
+    for (SystemId id : sysIds) try {
+      Path path = resolve.resolve(id);
+      if (!haveSystemDeps.contains(id.stableId())) systemDeps.put(path, id);
+      else filteredDeps.put(path, id);
     } catch (IllegalArgumentException e) {
-      missingDeps.add(new Depend.MissingId(sysId));
+      missingDeps.add(new Depend.MissingId(id));
     }
   }
 
-  public void accumBinaryDeps (Set<Path> into) {
-    into.addAll(binaryDeps.keySet());
-    for (Depends dep : moduleDeps) dep.accumBinaryDeps(into);
+  public void accumDeps (Set<Path> binary, Set<String> system) {
+    binary.addAll(binaryDeps.keySet());
+    for (Depend.Id sdep : systemDeps.values()) system.add(sdep.stableId());
+    for (Depends dep : moduleDeps) dep.accumDeps(binary, system);
   }
 
   public List<Path> classpath () {
@@ -147,7 +162,8 @@ public class Depends {
       out.println(indent + "= " + mod.classpath());
       String dindent = indent + "- ";
       for (Path path : binaryDeps.keySet()) out.println(dindent + path);
-      for (Path path : sharedDeps.keySet()) out.println(dindent + path + " (shared)");
+      for (Path path : systemDeps.keySet()) out.println(dindent + path + " (system)");
+      for (Path path : filteredDeps.keySet()) out.println(dindent + path + " (filtered)");
       for (Depends deps : moduleDeps) deps.dump(out, dindent, seen);
     } else {
       out.println(indent + "(*) " + mod.source);
@@ -158,7 +174,7 @@ public class Depends {
     if (!into.contains(mod.classpath())) {
       if (self) into.add(mod.classpath());
       into.addAll(binaryDeps.keySet());
-      into.addAll(sharedDeps.keySet());
+      into.addAll(systemDeps.keySet());
       for (Depends dep : moduleDeps) dep.buildClasspath(into, true);
     }
     return into;
@@ -168,7 +184,7 @@ public class Depends {
     if (!into.contains(mod.source)) {
       if (self) into.add(mod.source);
       into.addAll(binaryDeps.values());
-      into.addAll(sharedDeps.values());
+      into.addAll(systemDeps.values());
       // we were unable to resolve them, but we can still report them
       into.addAll(missingDeps);
       for (Depends dep : moduleDeps) dep.buildFlatIds(into, true);

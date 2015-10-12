@@ -57,6 +57,8 @@ public class Source implements Depend.Id {
     return new Source(vcs, withFrag(url, module));
   }
 
+  @Override public String stableId () { return vcs + ":" + url; }
+
   @Override public String toString () { return vcs + ":" + url; }
   @Override public int hashCode () { return vcs.hashCode() ^ url.hashCode(); }
   @Override public boolean equals (Object other) {

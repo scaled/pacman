@@ -9,6 +9,10 @@ import java.net.URISyntaxException;
 public class Depend {
 
   public static interface Id {
+    /** The id of this dependency without any version information. This is used in certain
+      * situations to determine whether two dependncies represent different versions of the same
+      * artifact. */
+    String stableId ();
   }
 
   public static class MissingId implements Id {
@@ -16,9 +20,8 @@ public class Depend {
     public MissingId (Id id) {
       this.id = id;
     }
-    public String toString () {
-      return "*missing: " + id + "*";
-    }
+    @Override public String stableId () { return id.stableId(); }
+    @Override public String toString () { return "*missing: " + id + "*"; }
   }
 
   public static enum Scope {

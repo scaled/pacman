@@ -38,9 +38,9 @@ public class ModuleLoader extends URLClassLoader {
           // classloader chain because the alternative is classloader madness
           ModuleLoader.class.getClassLoader());
     this.source = depends.mod.source;
-    this.delegates = new ClassLoader[depends.sharedDeps.size()+depends.moduleDeps.size()];
+    this.delegates = new ClassLoader[depends.systemDeps.size()+depends.moduleDeps.size()];
     int ii = 0;
-    for (Path path : depends.sharedDeps.keySet()) delegates[ii++] = resolve.sharedLoader(path);
+    for (Path path : depends.systemDeps.keySet()) delegates[ii++] = resolve.systemLoader(path);
     for (Depends dep : depends.moduleDeps) delegates[ii++] = dep.mod.loader(resolve);
   }
 
