@@ -88,14 +88,20 @@ public class PackageBuilder {
     List<String> cmd = new ArrayList<>();
     cmd.add(findJavaHome().resolve("bin").resolve("java").toString());
 
-    String scalacId = "org.scala-lang:scala-compiler:2.11.4";
+    // find out what version of scala-library is in our depends
+    Depends deps = mod.depends(_repo.resolver);
+    String scalaVers = deps.findVersion("org.scala-lang:scala-library");
+    if (scalaVers == null) scalaVers = "2.11.7";
+
+    // use scala-compiler of the same version
+    String scalacId = "org.scala-lang:scala-compiler:" + scalaVers;
     cmd.add("-cp");
     cmd.add(classpathToString(_repo.mvn.resolve(RepoId.parse(scalacId)).values()));
     cmd.add("scala.tools.nsc.Main");
 
     cmd.add("-d"); cmd.add(mod.root.relativize(mod.classesDir()).toString());
     cmd.addAll(mod.pkg.scopts);
-    List<Path> cp = buildClasspath(mod);
+    List<Path> cp = buildClasspath(mod, deps);
     if (!cp.isEmpty()) { cmd.add("-classpath"); cmd.add(classpathToString(cp)); }
     if (javaDir != null) addSources(mod.root, javaDir, ".java", cmd);
     addSources(mod.root, scalaDir, ".scala", cmd);
@@ -110,7 +116,7 @@ public class PackageBuilder {
     cmd.addAll(mod.pkg.jcopts);
     Path target = mod.root.relativize(mod.classesDir());
     cmd.add("-d"); cmd.add(target.toString());
-    List<Path> cp = buildClasspath(mod);
+    List<Path> cp = buildClasspath(mod, mod.depends(_repo.resolver));
     // if we're compiling multiple languages, we need to add the target directory to our classpath
     // because we may have Java source files that depend on classes compiled by the other language
     if (multiLang) cp.add(0, target);
@@ -148,8 +154,7 @@ public class PackageBuilder {
     });
   }
 
-  protected List<Path> buildClasspath (Module mod) {
-    Depends deps = mod.depends(_repo.resolver);
+  protected List<Path> buildClasspath (Module mod, Depends deps) {
     if (!deps.missingDeps.isEmpty()) {
       Log.log(mod + " has missing depends:");
       for (Depend.MissingId id : deps.missingDeps) Log.log(id.toString());
