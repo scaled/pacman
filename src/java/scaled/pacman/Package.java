@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,7 +22,15 @@ import java.util.TreeSet;
 public class Package {
 
   /** The string {@code package.scaled} for all to share and enjoy. */
-  public static String FILE = "package.scaled";
+  public static final String FILE = "package.scaled";
+
+  /** The default options passed to javac. */
+  public static final List<String> DEFAULT_JCOPTS = Arrays.asList(
+    "-source", "1.8", "-target", "1.8", "-Xlint:all");
+
+  /** The default options passed to scalac. */
+  public static final List<String> DEFAULT_SCOPTS = Arrays.asList(
+    "-deprecation", "-feature");
 
   /** The root of this package, generally a directory. */
   public final Path root;
@@ -90,10 +99,14 @@ public class Package {
     weburl  = cfg.resolve("weburl",  Config.StringP); // todo UrlP
     descrip = cfg.resolve("descrip", Config.StringP);
 
-    jcopts  = cfg.resolve("jcopt",   Config.StringListP);
+    jcopts = new ArrayList<>(DEFAULT_JCOPTS);
+    jcopts.addAll(cfg.resolve("jcopt", Config.StringListP));
     jcopts.addAll(cfg.resolve("jcopts", Config.WordsP));
-    scopts  = cfg.resolve("scopt",  Config.StringListP);
+
+    scopts = new ArrayList<>(DEFAULT_SCOPTS);
+    scopts.addAll(cfg.resolve("scopt", Config.StringListP));
     scopts.addAll(cfg.resolve("scopts", Config.WordsP));
+
     depends = cfg.resolveDepends();
     List<String> mods = cfg.resolve("module", Config.StringListP);
 
