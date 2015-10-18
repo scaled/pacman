@@ -53,13 +53,10 @@ public class RepoId implements Depend.Id {
     this.classifier = classifier;
   }
 
-  public String toCoord () {
-    return groupId + ":" + artifactId + ":" + version;
-  }
+  public String toCoord () { return groupId + ":" + artifactId + ":" + version; }
 
-  @Override public String stableId () {
-    return groupId + ":" + artifactId;
-  }
+  @Override public String stableId () { return groupId + ":" + artifactId; }
+  @Override public String version () { return version; }
 
   @Override public String toString () {
     return groupId + ":" + artifactId + ":" + version + ":" + kind +

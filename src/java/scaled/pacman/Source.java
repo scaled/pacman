@@ -58,6 +58,7 @@ public class Source implements Depend.Id {
   }
 
   @Override public String stableId () { return vcs + ":" + url; }
+  @Override public String version () { return "HEAD"; }
 
   @Override public String toString () { return vcs + ":" + url; }
   @Override public int hashCode () { return vcs.hashCode() ^ url.hashCode(); }

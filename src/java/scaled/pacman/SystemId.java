@@ -24,9 +24,8 @@ public class SystemId implements Depend.Id {
     this.version = version;
   }
 
-  @Override public String stableId () {
-    return platform + ":" + artifact;
-  }
+  @Override public String stableId () { return platform + ":" + artifact; }
+  @Override public String version () { return version; }
 
   @Override public String toString () {
     return platform + ":" + artifact + ":" + version;

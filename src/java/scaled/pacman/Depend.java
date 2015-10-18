@@ -13,6 +13,8 @@ public class Depend {
       * situations to determine whether two dependncies represent different versions of the same
       * artifact. */
     String stableId ();
+    /** The version of this dependency. */
+    String version ();
   }
 
   public static class MissingId implements Id {
@@ -21,6 +23,7 @@ public class Depend {
       this.id = id;
     }
     @Override public String stableId () { return id.stableId(); }
+    @Override public String version () { return id.version(); }
     @Override public String toString () { return "*missing: " + id + "*"; }
   }
 
