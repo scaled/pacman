@@ -156,6 +156,24 @@ public class Depends {
     return new ArrayList<>(buildFlatIds(new LinkedHashSet<>(), false));
   }
 
+  /**
+   * Returns the version for the depend with {@code stableId} in this modules transitive dependency
+   * set, or null if it does not exist therein.
+   */
+  public String findVersion (String stableId) {
+    for (Depend.Id dep : binaryDeps.values()) {
+      if (dep.stableId().equals(stableId)) return dep.version();
+    }
+    for (Depend.Id dep : systemDeps.values()) {
+      if (dep.stableId().equals(stableId)) return dep.version();
+    }
+    for (Depends mdeps : moduleDeps) {
+      String version = mdeps.findVersion(stableId);
+      if (version != null) return version;
+    }
+    return null;
+  }
+
   public void dump (PrintStream out, String indent, Set<Source> seen) {
     if (seen.add(mod.source)) {
       out.println(indent + mod.source);
