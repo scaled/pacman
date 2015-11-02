@@ -65,12 +65,16 @@ public class PackageBuilder {
     Map<String,Path> srcDirs = mod.sourceDirs();
 
     // if we have scala sources, use scalac to build scala+java code
-    Path scalaDir = srcDirs.get("scala"), javaDir = srcDirs.get("java");
+    Path scalaDir = srcDirs.get("scala");
+    Path javaDir = srcDirs.get("java");
+    Path kotlinDir = srcDirs.get("kt");
     // compile scala first in case there are java files that depend on scala's; scalac does some
     // fiddling to support mixed compilation but it doesn't generate bytecode for .javas
     if (scalaDir != null) buildScala(mod, scalaDir, javaDir);
+    // TODO: should we compile .kt before .java or after?
+    if (kotlinDir != null) buildKotlin(mod, kotlinDir);
     if (javaDir != null) buildJava(mod, javaDir, scalaDir != null);
-    // TODO: support other languages
+    // TODO: moar languages!
 
     // finally jar everything up
     createJar(mod.classesDir(), mod.moduleJar());
@@ -124,6 +128,36 @@ public class PackageBuilder {
     addSources(mod.root, javaDir, ".java", cmd);
 
     Exec.exec(mod.root, cmd).expect(0, "Java build failed.");
+  }
+
+  protected void buildKotlin (Module mod, Path ktDir) throws IOException {
+    List<String> cmd = new ArrayList<>();
+    cmd.add(findJavaHome().resolve("bin").resolve("java").toString());
+
+    // find out what version of kotlin-library is in our depends
+    Depends deps = mod.depends(_repo.resolver);
+    String kotlinVers = deps.findVersion("org.jetbrains.kotlin:kotlin-stdlib");
+    if (kotlinVers == null) kotlinVers = "1.0.0-beta-1038";
+
+    // use kotlin-compiler of the same version
+    String kotlincId = "org.jetbrains.kotlin:kotlin-compiler:" + kotlinVers;
+    cmd.add("-cp");
+    cmd.add(classpathToString(_repo.mvn.resolve(RepoId.parse(kotlincId)).values()));
+    cmd.add("org.jetbrains.kotlin.cli.jvm.K2JVMCompiler");
+
+    // cmd.addAll(mod.pkg.ktcopts);
+    Path target = mod.root.relativize(mod.classesDir());
+    cmd.add("-d"); cmd.add(target.toString());
+    List<Path> cp = buildClasspath(mod, mod.depends(_repo.resolver));
+    /* TODO: needed?
+    // if we're compiling multiple languages, we need to add the target directory to our classpath
+    // because we may have Java source files that depend on classes compiled by the other language
+    if (multiLang) cp.add(0, target);
+    */
+    if (!cp.isEmpty()) { cmd.add("-cp"); cmd.add(classpathToString(cp)); }
+    addSources(mod.root, ktDir, ".kt", cmd);
+
+    Exec.exec(mod.root, cmd).expect(0, "Kotlin build failed.");
   }
 
   protected void createJar (Path sourceDir, Path targetJar) throws IOException {
