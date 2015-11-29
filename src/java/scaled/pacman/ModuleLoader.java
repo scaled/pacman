@@ -23,7 +23,7 @@ import java.util.Set;
  */
 public class ModuleLoader extends URLClassLoader {
 
-  public final Source source;
+  public final Module mod;
   public final ClassLoader[] delegates;
 
   public static URL toURL (Path path) {
@@ -37,11 +37,15 @@ public class ModuleLoader extends URLClassLoader {
           // contains just the pacman bootstrap code, but we need pacman (and mfetcher) to be in the
           // classloader chain because the alternative is classloader madness
           ModuleLoader.class.getClassLoader());
-    this.source = depends.mod.source;
+    this.mod = depends.mod;
     this.delegates = new ClassLoader[depends.systemDeps.size()+depends.moduleDeps.size()];
     int ii = 0;
     for (Path path : depends.systemDeps.keySet()) delegates[ii++] = resolve.systemLoader(path);
     for (Depends dep : depends.moduleDeps) delegates[ii++] = dep.mod.loader(resolve);
+  }
+
+  public Source source () {
+    return mod.source;
   }
 
   public void dump (String depth) {
@@ -80,11 +84,11 @@ public class ModuleLoader extends URLClassLoader {
       try { return loader.loadClass(name); }
       catch (ClassNotFoundException cnfe) {} // keep going
     }
-    throw new ClassNotFoundException(source + " missing dependency: " + name);
+    throw new ClassNotFoundException(source() + " missing dependency: " + name);
   }
 
   @Override public String toString () {
-    return "ModLoader(" + source + ")";
+    return "ModLoader(" + source() + ")";
   }
 
   private static URL[] toURLs (Path classes, Collection<Path> paths) {
