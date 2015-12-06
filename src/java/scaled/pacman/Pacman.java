@@ -233,6 +233,7 @@ public class Pacman {
           debug("Running " + pkgMod + " " + classname + " " + Arrays.asList(args));
           loader.dump("  ");
         }
+        Thread.currentThread().setContextClassLoader(loader);
         Class<?> clazz = loader.loadClass(classname);
         clazz.getMethod("main", String[].class).invoke(null, (Object)args);
       } catch (Exception e) {
