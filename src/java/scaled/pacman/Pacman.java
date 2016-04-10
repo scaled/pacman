@@ -25,17 +25,18 @@ public class Pacman {
     "",
     "where <command> is one of:",
     "",
-    "  list [--all]                         lists installed (or all) packages",
-    "  search text                          lists all packages in directory which match text",
-    "  refresh                              updates the package directory index",
-    "  install [pkg-name | pkg-url]         installs package (by name or url) and its depends",
-    "  upgrade [pkg-name]                   upgrades package and its depends",
-    "  info [pkg-name | --all]              prints detailed info on pkg-name (or all packages)",
-    "  deptree pkg-name                     prints depend tree for (all modules in) pkg-name",
-    "  depends pkg-name#module              prints flattened depend list pkg-name#module",
     "  build pkg-name [--deps]              cleans and builds pkg-name (and depends if --deps)",
     "  clean pkg-name [--deps]              cleans pkg-name (and its depends if --deps)",
-    "  run pkg-name#module class [arg ...]  runs class from pkg-name#module with args"
+    "  depends pkg-name#module              prints flattened depend list pkg-name#module",
+    "  deptree pkg-name                     prints depend tree for (all modules in) pkg-name",
+    "  info [pkg-name | --all]              prints detailed info on pkg-name (or all packages)",
+    "  install [pkg-name | pkg-url]         installs package (by name or url) and its depends",
+    "  list [--all]                         lists installed (or all) packages",
+    "  rebuild                              cleans and rebuilds all installed packages",
+    "  refresh                              updates the package directory index",
+    "  run pkg-name#module class [arg ...]  runs class from pkg-name#module with args",
+    "  search text                          lists all packages in directory which match text",
+    "  upgrade [pkg-name]                   upgrades package and its depends"
   };
 
   public static final Printer out = new Printer(System.out);
@@ -55,17 +56,18 @@ public class Pacman {
     // we'll introduce proper arg parsing later; for now KISS
     try {
       switch (args[0]) {
-        case    "list": list(optarg(args, 1, "").equals("--all")); break;
-        case  "search": search(optarg(args, 1, "")); break;
-        case "refresh": refresh(); break;
-        case "install": install(tail(args, 1)); break;
-        case "upgrade": upgrade(arg(args, 1)); break;
+        case     "run": run(arg(args, 1), arg(args, 2), tail(args, 3)); break;
         case    "info": info(arg(args, 1)); break;
-        case "deptree": deptree(arg(args, 1)); break;
-        case "depends": depends(arg(args, 1)); break;
+        case    "list": list(optarg(args, 1, "").equals("--all")); break;
         case   "build": build(arg(args, 1), optarg(args, 2, "").equals("--deps")); break;
         case   "clean": clean(arg(args, 1), optarg(args, 2, "").equals("--deps")); break;
-        case     "run": run(arg(args, 1), arg(args, 2), tail(args, 3)); break;
+        case  "search": search(optarg(args, 1, "")); break;
+        case "depends": depends(arg(args, 1)); break;
+        case "deptree": deptree(arg(args, 1)); break;
+        case "install": install(tail(args, 1)); break;
+        case "rebuild": buildAll(); break;
+        case "refresh": refresh(); break;
+        case "upgrade": upgrade(arg(args, 1)); break;
         default: fail(USAGE); break;
       }
     } catch (MissingArgException mae) {
@@ -198,6 +200,15 @@ public class Pacman {
         out.println(id);
       }
     });
+  }
+
+  private static void buildAll () {
+    for (Package bpkg : repo.topoPackages()) {
+      try { new PackageBuilder(repo, bpkg).build(); }
+      catch (Exception e) {
+        fail("Failure invoking 'build' in: " + bpkg.root, e);
+      }
+    }
   }
 
   private static void build (String pkgName, boolean deps) {
