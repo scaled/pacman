@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -93,6 +94,32 @@ public class PackageRepo {
   /** Returns all currently installed packages. */
   public Iterable<Package> packages () {
     return _pkgs.values();
+  }
+
+  /** Returns all currently installed packages sorted topologically by dependency. Packages will
+    * always appear later in the list than any packages on which they depend. */
+  public List<Package> topoPackages () {
+    LinkedHashMap<Source,Package> pkgs = new LinkedHashMap<>();
+    Set<Package> inPkgs = new HashSet<>(_pkgs.values());
+    // TODO: this has pretty crappy runtime; use smarter algorithm
+    while (pkgs.size() < _pkgs.size()) {
+      Iterator<Package> iter = inPkgs.iterator();
+      PKGS: while (iter.hasNext()) {
+        Package pkg = iter.next();
+        // if any of this package's dependencies are unsatisfied, skip it until the next pass
+        for (Module mod : pkg.modules()) {
+          for (Depend dep : mod.depends) if (dep.isSource()) {
+            Source psrc = ((Source)dep.id).packageSource();
+            if (!psrc.equals(pkg.source) && !pkgs.containsKey(psrc)) {
+              continue PKGS;
+            }
+          }
+        }
+        iter.remove();
+        pkgs.put(pkg.source, pkg);
+      }
+    }
+    return new ArrayList<>(pkgs.values());
   }
 
   /** Returns the package named {@code name}, if any. */
