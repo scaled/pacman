@@ -100,6 +100,7 @@ public class Pacman {
   private static void list (boolean all) {
     List<String[]> info = new ArrayList<>();
     for (Package pkg : repo.packages()) info.add(tuple(pkg.name, pkg.descrip));
+    info.sort((i1, i2) -> i1[0].compareTo(i2[0]));
     if (!info.isEmpty()) info.add(0, tuple("Installed:", ""));
     if (all) {
       if (!info.isEmpty()) info.add(tuple("", ""));
