@@ -17,7 +17,10 @@ import impl.org.eclipse.aether.transfer.TransferEvent;
 
 public class MavenResolver {
 
-  public final DependencyManager depmgr = new DependencyManager(RepoId.m2repo, null, false, false) {
+  public static final List<String> REPOS = Arrays.asList(
+    "central", "http://repo.gradle.org/gradle/libs-releases-local/");
+
+  public final DependencyManager depmgr = new DependencyManager(RepoId.m2repo, REPOS, false, false) {
     @Override protected void onRepositoryEvent (String method, RepositoryEvent event) {
       if (method.endsWith("Invalid") || method.endsWith("Missing")) {
         Log.log("MavenResolver." + method + " " + event);
