@@ -32,7 +32,8 @@ public class Pacman {
     "  info [pkg-name | --all]              prints detailed info on pkg-name (or all packages)",
     "  install [pkg-name | pkg-url]         installs package (by name or url) and its depends",
     "  list [--all]                         lists installed (or all) packages",
-    "  rebuild                              cleans and rebuilds all installed packages",
+    "  rebuild [from-pkg-name]              cleans and rebuilds all installed packages",
+    "                                       continues rebuild at from-pkg-name if supplied",
     "  refresh                              updates the package directory index",
     "  run pkg-name#module class [arg ...]  runs class from pkg-name#module with args",
     "  search text                          lists all packages in directory which match text",
@@ -65,7 +66,7 @@ public class Pacman {
         case "depends": depends(arg(args, 1)); break;
         case "deptree": deptree(arg(args, 1)); break;
         case "install": install(tail(args, 1)); break;
-        case "rebuild": buildAll(); break;
+        case "rebuild": buildAll(optarg(args, 1, "")); break;
         case "refresh": refresh(); break;
         case "upgrade": upgrade(arg(args, 1)); break;
         default: fail(USAGE); break;
@@ -202,8 +203,16 @@ public class Pacman {
     });
   }
 
-  private static void buildAll () {
+  private static void buildAll (String pkgName) {
+    boolean skip = !pkgName.equals("");
     for (Package bpkg : repo.topoPackages()) {
+      if (skip) {
+        if (bpkg.name.equals(pkgName)) skip = false;
+        else {
+          Log.log("Skipping " + bpkg.name + "...");
+          continue;
+        }
+      }
       try { new PackageBuilder(repo, bpkg).build(); }
       catch (Exception e) {
         fail("Failure invoking 'build' in: " + bpkg.root, e);
