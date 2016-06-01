@@ -46,7 +46,17 @@ public class PackageFetcher {
     Path target = _repo.packageDir(pkg.name);
     // windows can die in a fire
     if (Props.isWindows) {
-      Runtime.getRuntime().exec(new String[] { "move", _pkgDir.toString(), target.toString() });
+      String[] args = { "cmd", "/c", "move", _pkgDir.toString(), target.toString() };
+      Process mover = Runtime.getRuntime().exec(args);
+      try {
+        int exitCode = mover.waitFor();
+        if (exitCode != 0) {
+          throw new IOException("Failed to move " + _pkgDir + " to " + target + ": " + exitCode);
+        }
+      } catch (InterruptedException ie) {
+        throw new IOException("Move command interrupted", ie);
+      }
+
     } else {
       Files.move(_pkgDir, target, StandardCopyOption.ATOMIC_MOVE);
     }
