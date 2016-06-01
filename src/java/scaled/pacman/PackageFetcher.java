@@ -44,8 +44,12 @@ public class PackageFetcher {
   /** Installs the fetche packaged into its proper location in the package repository. */
   public void install (Package pkg) throws IOException {
     Path target = _repo.packageDir(pkg.name);
-    Filez.makeWritable(_pkgDir);
-    Files.move(_pkgDir, target, StandardCopyOption.ATOMIC_MOVE);
+    // windows can die in a fire
+    if (Props.isWindows) {
+      Runtime.getRuntime().exec(new String[] { "move", _pkgDir.toString(), target.toString() });
+    } else {
+      Files.move(_pkgDir, target, StandardCopyOption.ATOMIC_MOVE);
+    }
     _repo.addPackage(target.resolve(Package.FILE));
   }
 

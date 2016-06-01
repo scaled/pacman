@@ -21,6 +21,9 @@ public class Props {
 
   public static final boolean debug = Boolean.getBoolean("debug");
 
+  public static final String osName = System.getProperty("os.name").toLowerCase();
+  public static final boolean isWindows = osName.contains("windows");
+
   public static String cwd () {
     return System.getProperty("user.dir");
   }

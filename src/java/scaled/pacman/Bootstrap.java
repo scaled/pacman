@@ -69,7 +69,7 @@ public class Bootstrap {
     Path pacmanJar = buildPacman(pacmanRoot, mfetcherJar);
 
     // on Windows we need to copy pacman's module.jar to a temporary file to avoid freakout when
-    // pacman tries to rebuild itself; yay Windows
+    // pacman tries to rebuild itself; yay Windows (also no Props here because we're in Bootstrap)
     if (System.getProperty("os.name").toLowerCase().contains("windows")) {
       Path runtimeJar = pacmanJar.getParent().resolve("running.jar");
       Files.copy(pacmanJar, runtimeJar, StandardCopyOption.REPLACE_EXISTING);
