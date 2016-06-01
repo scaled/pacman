@@ -40,6 +40,18 @@ public class Filez {
     });
   }
 
+  /** Marks {@code dir} and all of its contents writable. */
+  public static void makeWritable (Path dir) throws IOException {
+    if (!Files.exists(dir)) return; // our job is already done
+    Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
+      @Override public FileVisitResult visitFile (Path file, BasicFileAttributes attrs)
+      throws IOException {
+        file.toFile().setWritable(true);
+        return FileVisitResult.CONTINUE;
+      }
+    });
+  }
+
   /** Copies the contents of {@code fromDir} into {@code toDir} recursively.
     * The directory structure under {@code fromDir} is replicated into {@code toDir} as needed. */
   public static void copyAll (Path fromDir, Path toDir) throws IOException {
