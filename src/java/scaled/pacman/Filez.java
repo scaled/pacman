@@ -4,6 +4,7 @@
 
 package scaled.pacman;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -15,19 +16,25 @@ import java.nio.file.attribute.BasicFileAttributes;
 /** File utilities. */
 public class Filez {
 
+  /** Deletes a file or empty directory, setting its write permissions if necessary. */
+  public static void safeDelete (Path path) throws IOException {
+    if (!Files.isWritable(path)) path.toFile().setWritable(true);
+    Files.delete(path);
+  }
+
   /** Deletes {@code dir} and all of its contents. */
   public static void deleteAll (Path dir) throws IOException {
     if (!Files.exists(dir)) return; // our job is already done
     Files.walkFileTree(dir, new SimpleFileVisitor<Path>() {
       @Override public FileVisitResult visitFile (Path file, BasicFileAttributes attrs)
       throws IOException {
-        if (!attrs.isDirectory()) Files.delete(file);
+        if (!attrs.isDirectory()) safeDelete(file);
         return FileVisitResult.CONTINUE;
       }
       @Override public FileVisitResult postVisitDirectory (Path dir, IOException exn)
       throws IOException {
         if (exn != null) throw exn;
-        Files.delete(dir);
+        safeDelete(dir);
         return FileVisitResult.CONTINUE;
       }
     });
