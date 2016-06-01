@@ -68,6 +68,14 @@ public class Bootstrap {
     // build Pacman if needed
     Path pacmanJar = buildPacman(pacmanRoot, mfetcherJar);
 
+    // on Windows we need to copy pacman's module.jar to a temporary file to avoid freakout when
+    // pacman tries to rebuild itself; yay Windows
+    if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+      Path runtimeJar = pacmanJar.getParent().resolve("running.jar");
+      Files.copy(pacmanJar, runtimeJar, StandardCopyOption.REPLACE_EXISTING);
+      pacmanJar = runtimeJar;
+    }
+
     // if we have any JVM arguments, we need to fork, otherwise we can reuse this JVM
     if (pargs.jvmArgs.isEmpty()) {
       // set any requested system properties
