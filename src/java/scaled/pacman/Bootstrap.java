@@ -39,8 +39,7 @@ public class Bootstrap {
   static final String PACMAN_CLASS = "scaled.pacman.Pacman";
 
   static final Path USER_HOME = Paths.get(System.getProperty("user.home"));
-  static final Path JRE_HOME = Paths.get(System.getProperty("java.home"));
-  static final Path JAVA_HOME = JRE_HOME.getParent();
+  static final Path JAVA_HOME = findJavaHome();
 
   static boolean DEBUG = false;
   static void debug (String message) { if (DEBUG) System.err.println("▸ " + message); }
@@ -57,6 +56,8 @@ public class Bootstrap {
   public static void main (String[] args) throws Throwable {
     // parse our command line arguments (do this early so that we honor -d ASAP)
     Args pargs = parseArgs(args);
+    debug("Java home: " + JAVA_HOME);
+    debug("User home: " + USER_HOME);
     // determine where Scaled is (or should be) installed
     Path scaledHome = findScaledHome();
     debug("Scaled home: " + scaledHome);
@@ -118,6 +119,16 @@ public class Bootstrap {
       command.addAll(pargs.appArgs);
       new ProcessBuilder(command).inheritIO().start();
     }
+  }
+
+  static Path findJavaHome () {
+    Path javaHome = Paths.get(System.getProperty("java.home"));
+    // java.home may be JDK_HOME/jre
+    if (Files.exists(javaHome.getParent().resolve("release"))) {
+      return javaHome.getParent();
+    }
+    // otherwise hopefully it points to the JDK home, so use it as is
+    return javaHome;
   }
 
   static Path findScaledHome () {
