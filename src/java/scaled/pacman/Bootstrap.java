@@ -4,6 +4,7 @@
 
 package scaled.pacman;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
@@ -71,7 +72,9 @@ public class Bootstrap {
     // on Windows we need to copy pacman's module.jar to a temporary file to avoid freakout when
     // pacman tries to rebuild itself; yay Windows (also no Props here because we're in Bootstrap)
     if (System.getProperty("os.name").toLowerCase().contains("windows")) {
-      Path runtimeJar = pacmanJar.getParent().resolve("running.jar");
+      File tempJar = File.createTempFile("pacman", ".jar", pacmanJar.getParent().toFile());
+      tempJar.deleteOnExit();
+      Path runtimeJar = tempJar.toPath();
       Files.copy(pacmanJar, runtimeJar, StandardCopyOption.REPLACE_EXISTING);
       pacmanJar = runtimeJar;
     }
