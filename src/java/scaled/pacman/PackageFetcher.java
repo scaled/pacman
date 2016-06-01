@@ -47,7 +47,10 @@ public class PackageFetcher {
     // windows can die in a fire
     if (Props.isWindows) {
       String[] args = { "cmd", "/c", "move", _pkgDir.toString(), target.toString() };
-      Process mover = Runtime.getRuntime().exec(args);
+      Process mover = new ProcessBuilder(args).
+        redirectOutput(ProcessBuilder.Redirect.INHERIT).
+        redirectError(ProcessBuilder.Redirect.INHERIT).
+        start();
       try {
         int exitCode = mover.waitFor();
         if (exitCode != 0) {
