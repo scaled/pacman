@@ -48,8 +48,10 @@ public class Exec {
   }
 
   public static Handle exec (Path cwd, String... cmd) throws IOException {
+    // resolve the real CWD to avoid problems with symlinks and Windows
+    Path realCwd = cwd.toRealPath();
     if (Props.debug) {
-      System.out.println("Exec in " + cwd);
+      System.out.println("Exec in " + realCwd);
       System.out.println("  " + cmd[0]);
       boolean cont = false;
       for (int ii = 1; ii < cmd.length; ii++) {
@@ -62,7 +64,7 @@ public class Exec {
     }
 
     ProcessBuilder proc = new ProcessBuilder(cmd);
-    proc.directory(cwd.toFile());
+    proc.directory(realCwd.toFile());
     return new Handle(proc);
   }
 }
