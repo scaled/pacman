@@ -245,7 +245,7 @@ public class Bootstrap {
     note("Compiling Scaled package manager...");
     Path binJavac = JAVA_HOME.resolve("bin").resolve("javac");
     exec(pacmanRoot, binJavac.toString(),
-         "-Dfile.encoding=" + System.getProperty("file.encoding"),
+         "-encoding", System.getProperty("file.encoding"),
          "-classpath", mfetcherJar.toString(),
          "-d", classesDir.toString(), "@target/pacman.sources");
 
