@@ -241,7 +241,9 @@ public class Bootstrap {
     // build the code
     note("Compiling Scaled package manager...");
     Path binJavac = JAVA_HOME.resolve("bin").resolve("javac");
-    exec(pacmanRoot, binJavac.toString(), "-classpath", mfetcherJar.toString(),
+    exec(pacmanRoot, binJavac.toString(),
+         "-Dfile.encoding=" + System.getProperty("file.encoding"),
+         "-classpath", mfetcherJar.toString(),
          "-d", classesDir.toString(), "@target/pacman.sources");
 
     // finally create the module.jar file
