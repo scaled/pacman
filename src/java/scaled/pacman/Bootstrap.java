@@ -153,6 +153,9 @@ public class Bootstrap {
     // if we're on a Mac, use Library/Application Support/Scaled
     Path appsup = USER_HOME.resolve("Library").resolve("Application Support");
     if (Files.exists(appsup)) return appsup.resolve("Scaled");
+    // if we're on (newish) Windows, use AppData/Local
+    Path apploc = USER_HOME.resolve("AppData").resolve("Local");
+    if (Files.exists(apploc)) return apploc.resolve("Scaled");
     // otherwise use ~/.scaled (where ~ is user.home)
     return USER_HOME.resolve(".scaled");
   }
