@@ -9,12 +9,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
 
 /** The main command line entry point for the Scaled Package Manager. */
@@ -204,20 +200,92 @@ public class Pacman {
   }
 
   private static void buildAll (String pkgName) {
-    boolean skip = !pkgName.equals("");
-    for (Package bpkg : repo.topoPackages()) {
-      if (skip) {
-        if (bpkg.name.equals(pkgName)) skip = false;
-        else {
-          Log.log("Skipping " + bpkg.name + "...");
-          continue;
-        }
-      }
-      try { new PackageBuilder(repo, bpkg).build(); }
-      catch (Exception e) {
-        fail("Failure invoking 'build' in: " + bpkg.root, e);
+    List<Package> toBuild = repo.topoPackages();
+    if (!pkgName.equals("")) {
+      while (!toBuild.isEmpty() && !toBuild.get(0).name.equals(pkgName)) {
+        Log.log("Skipping " + toBuild.remove(0).name + "...");
       }
     }
+
+    int[] procsToThreads = { 1, 1, 1, 2, 2, 3, 4, 5, 6 };
+    int procs = Math.min(Runtime.getRuntime().availableProcessors(), procsToThreads.length-1);
+    int threads = procsToThreads[procs];
+    Log.log("Building up to " + threads + " packages in parallel.");
+
+    class Builder {
+      private CountDownLatch done = new CountDownLatch(threads);
+      private Set<Source> built = new HashSet<>();
+      private List<String> failMsgs = new ArrayList<>();
+      private List<Exception> failErrs = new ArrayList<>();
+
+      private synchronized Package getNext () {
+        if (done()) return null;
+
+        Package next = toBuild.remove(0);
+        while (!next.dependsSatisfied(built)) {
+          debug("Waiting for depends: " + next.name);
+          try {
+            wait();
+          } catch (InterruptedException ie) {
+            fail("Interrupted waiting to build " + next.root);
+          }
+          // if another build failed while we were waiting, abandon ship
+          if (!failMsgs.isEmpty()) {
+            return null;
+          }
+        }
+        return next;
+      }
+
+      private synchronized boolean done () {
+        return toBuild.isEmpty() || !failMsgs.isEmpty();
+      }
+
+      private synchronized void noteBuilt (Package pkg) {
+        built.add(pkg.source);
+        notifyAll();
+      }
+
+      private synchronized void noteFailed (Package pkg, Exception err) {
+        failMsgs.add("Failure invoking 'build' in: " + pkg.root);
+        failErrs.add(err);
+        notifyAll();
+      }
+
+      private void runThread () {
+        Package next;
+        while ((next = getNext()) != null) {
+          try {
+            new PackageBuilder(repo, next).build();
+            noteBuilt(next);
+          } catch (Exception e) {
+            noteFailed(next, e);
+          }
+        }
+        done.countDown();
+      }
+
+      public void run () {
+        for (int ii = 0; ii < threads; ii++) {
+          new Thread() { public void run () { runThread(); }}.start();
+        }
+
+        try {
+          done.await();
+        } catch (InterruptedException ie) {
+          fail("Interrupted waiting for build to complete.");
+        }
+
+        if (!failMsgs.isEmpty()) {
+          for (int ii = 0; ii < failMsgs.size(); ii++) {
+            System.err.println(failMsgs.get(ii));
+            failErrs.get(ii).printStackTrace(System.err);
+          }
+          System.exit(255);
+        }
+      }
+    }
+    new Builder().run();
   }
 
   private static void build (String pkgName, boolean deps) {
