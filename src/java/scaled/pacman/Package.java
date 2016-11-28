@@ -79,6 +79,19 @@ public class Package {
     return _modules.get(name);
   }
 
+  /** Returns whether all of this package's (package) dependencies are in {@code pkgs}. */
+  public boolean dependsSatisfied (Set<Source> pkgs) {
+    for (Module mod : modules()) {
+      for (Depend dep : mod.depends) if (dep.isSource()) {
+        Source psrc = ((Source)dep.id).packageSource();
+        if (!psrc.equals(source) && !pkgs.contains(psrc)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
   /** Creates a package info from the supplied `package.scaled` file.
     * The file is assumed to be in the top-level directory of the package in question. */
   public Package (Path file) throws IOException {

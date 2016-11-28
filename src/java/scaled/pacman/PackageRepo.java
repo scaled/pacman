@@ -104,17 +104,10 @@ public class PackageRepo {
     // TODO: this has pretty crappy runtime; use smarter algorithm
     while (pkgs.size() < _pkgs.size()) {
       Iterator<Package> iter = inPkgs.iterator();
-      PKGS: while (iter.hasNext()) {
+      while (iter.hasNext()) {
         Package pkg = iter.next();
         // if any of this package's dependencies are unsatisfied, skip it until the next pass
-        for (Module mod : pkg.modules()) {
-          for (Depend dep : mod.depends) if (dep.isSource()) {
-            Source psrc = ((Source)dep.id).packageSource();
-            if (!psrc.equals(pkg.source) && !pkgs.containsKey(psrc)) {
-              continue PKGS;
-            }
-          }
-        }
+        if (!pkg.dependsSatisfied(pkgs.keySet())) continue;
         iter.remove();
         pkgs.put(pkg.source, pkg);
       }
