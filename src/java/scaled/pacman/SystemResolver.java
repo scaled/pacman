@@ -20,7 +20,6 @@ public class SystemResolver {
     }
     for (JDK jdk : JDK.jdks()) {
       if (jdk.version().startsWith(id.version)) {
-        System.out.println("Using " + jdk.home + " (this " + JDK.thisJDK.home + ")");
         return jdk.home.resolve("lib").resolve("tools.jar");
       }
     }
