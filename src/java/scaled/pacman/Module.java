@@ -94,8 +94,8 @@ public class Module {
   public Path classesDir () { return outputDir().resolve("classes"); }
   public Path moduleJar () { return outputDir().resolve("module.jar"); }
 
-  public Path classpath () {
-    return (!Props.ignoreModuleJar && Files.exists(moduleJar())) ? moduleJar() : classesDir();
+  public Path classpath (boolean ignoreModuleJar) {
+    return (!ignoreModuleJar && Files.exists(moduleJar())) ? moduleJar() : classesDir();
   }
 
   @Override public String toString () {

@@ -31,6 +31,9 @@ public class Depends {
 
   /** Used to resolve module dependencies. */
   public static interface Resolver {
+    /** Whether to use {@code module.jar} if it exists for a module. */
+    boolean ignoreModuleJar ();
+
     /** Returns the module identified by {@code source}, if any. */
     Optional<Module> moduleBySource (Source source);
 
@@ -80,6 +83,9 @@ public class Depends {
   /** Contains any declared source dependencies that could not be resolved. */
   public final List<Depend.MissingId> missingDeps;
 
+  /** Whether or not we're ignoring {@code module.jar} files. */
+  public final boolean ignoreModuleJar;
+
   public Depends (Module module, Resolver resolve) {
     this.mod = module;
     this.systemDeps = new HashMap<>();
@@ -88,6 +94,7 @@ public class Depends {
     this.filteredDeps = new HashMap<>();
     this.moduleDeps = new ArrayList<>();
     this.missingDeps = new ArrayList<>();
+    this.ignoreModuleJar = resolve.ignoreModuleJar();
 
     List<RepoId> mvnIds = new ArrayList<>();
     List<SystemId> sysIds = new ArrayList<>();
@@ -177,7 +184,7 @@ public class Depends {
   public void dump (PrintStream out, String indent, Set<Source> seen) {
     if (seen.add(mod.source)) {
       out.println(indent + mod.source);
-      out.println(indent + "= " + mod.classpath());
+      out.println(indent + "= " + mod.classpath(ignoreModuleJar));
       String dindent = indent + "- ";
       for (Path path : binaryDeps.keySet()) out.println(dindent + path);
       for (Path path : systemDeps.keySet()) out.println(dindent + path + " (system)");
@@ -189,8 +196,9 @@ public class Depends {
   }
 
   private Set<Path> buildClasspath (Set<Path> into, boolean self) {
-    if (!into.contains(mod.classpath())) {
-      if (self) into.add(mod.classpath());
+    Path modpath = mod.classpath(ignoreModuleJar);
+    if (!into.contains(modpath)) {
+      if (self) into.add(modpath);
       into.addAll(binaryDeps.keySet());
       into.addAll(systemDeps.keySet());
       for (Depends dep : moduleDeps) dep.buildClasspath(into, true);

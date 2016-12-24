@@ -50,6 +50,9 @@ public class PackageRepo {
 
   /** Used to resolve dependencies. */
   public final Depends.Resolver resolver = new Depends.Resolver() {
+    public boolean ignoreModuleJar () {
+      return Props.ignoreModuleJar;
+    }
     public Optional<Module> moduleBySource (Source source) {
       Package pkg = _pkgs.get(source.packageSource());
       return Optional.ofNullable(pkg == null ? null : pkg.module(source.module()));
