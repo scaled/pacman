@@ -201,12 +201,6 @@ public class Pacman {
 
   private static void buildAll (String pkgName) {
     List<Package> toBuild = repo.topoPackages();
-    if (!pkgName.equals("")) {
-      while (!toBuild.isEmpty() && !toBuild.get(0).name.equals(pkgName)) {
-        Log.log("Skipping " + toBuild.remove(0).name + "...");
-      }
-    }
-
     int[] procsToThreads = { 1, 1, 1, 2, 2, 3, 4, 5, 6 };
     int procs = Math.min(Runtime.getRuntime().availableProcessors(), procsToThreads.length-1);
     int threads = procsToThreads[procs];
@@ -265,6 +259,11 @@ public class Pacman {
         done.countDown();
       }
 
+      public synchronized void noteSkipped (Package pkg) {
+        Log.log("Skipping " + pkg.name + "...");
+        built.add(pkg.source);
+      }
+
       public void run () {
         for (int ii = 0; ii < threads; ii++) {
           new Thread() { public void run () { runThread(); }}.start();
@@ -285,7 +284,14 @@ public class Pacman {
         }
       }
     }
-    new Builder().run();
+
+    Builder builder = new Builder();
+    if (!pkgName.equals("")) {
+      while (!toBuild.isEmpty() && !toBuild.get(0).name.equals(pkgName)) {
+        builder.noteSkipped(toBuild.remove(0)); // for depends tracking
+      }
+    }
+    builder.run();
   }
 
   private static void build (String pkgName, boolean deps) {
