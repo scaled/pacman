@@ -196,6 +196,7 @@ public class PackageBuilder {
     }
     List<Path> cp = deps.classpath();
     cp.remove(mod.classesDir());
+    cp.remove(mod.moduleJar());
     return cp;
   }
 
