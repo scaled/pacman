@@ -7,9 +7,7 @@ package scaled.pacman;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class PackageOp {
 
@@ -46,6 +44,7 @@ public class PackageOp {
 
   /** Upgrades the package referenced by {@code source} and all of its depends. */
   public void upgrade (Package pkg) throws IOException {
+    boolean mainUpgrade = _upgraded.isEmpty();
     // if we've already upgraded this package during this operation, don't do it again
     if (!_upgraded.add(pkg.source)) return;
 
@@ -65,11 +64,18 @@ public class PackageOp {
 
     // rebuild the package itself
     if (rebuild(npkg)) {
+      _rebuildDeps.add(pkg);
+    }
+
+    // if this is the main upgrade (not a dependent upgrade) then start rebuilding all of the
+    // packages that depend on the upgraded packages
+    while (mainUpgrade && !_rebuildDeps.isEmpty()) {
+      Package upkg = _rebuildDeps.remove(0);
       // if we actually rebuilt anything, upgrade any packages that depend on this package
       Set<Package> updeps = new HashSet<>();
       for (Package dpkg : _repo.packages()) {
-        if (dpkg.packageDepends().contains(pkg.source)) {
-          // force this package to be rebuild (which may not yet have happened even if the package
+        if (dpkg.packageDepends().contains(upkg.source)) {
+          // force this package to be rebuilt (which may not yet have happened even if the package
           // is already in _upgraded)
           _forceBuild.add(dpkg.source);
           // omit this package from our forced upgrade list if it's already been upgraded
@@ -77,7 +83,7 @@ public class PackageOp {
         }
       }
       if (!updeps.isEmpty()) {
-        logPhase("Upgrading " + updeps.size() + " pkgs which depend on " + npkg.name + "...");
+        logPhase("Upgrading " + updeps.size() + " pkgs which depend on " + upkg.name + "...");
         for (Package updep : updeps) upgrade(updep);
       }
     }
@@ -108,4 +114,5 @@ public class PackageOp {
   protected final PackageRepo _repo;
   protected final Set<Source> _upgraded = new HashSet<>();
   protected final Set<Source> _forceBuild = new HashSet<>();
+  protected final List<Package> _rebuildDeps = new ArrayList<>();
 }
