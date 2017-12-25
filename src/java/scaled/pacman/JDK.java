@@ -2,7 +2,6 @@
 // Pacman - the Scaled package manager
 // https://github.com/scaled/pacman/blob/master/LICENSE
 
-
 package scaled.pacman;
 
 import java.nio.file.Files;
