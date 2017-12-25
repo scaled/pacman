@@ -107,12 +107,17 @@ public class PackageRepo {
     // TODO: this has pretty crappy runtime; use smarter algorithm
     while (pkgs.size() < _pkgs.size()) {
       Iterator<Package> iter = inPkgs.iterator();
+      int removed = 0;
       while (iter.hasNext()) {
         Package pkg = iter.next();
         // if any of this package's dependencies are unsatisfied, skip it until the next pass
         if (!pkg.dependsSatisfied(pkgs.keySet())) continue;
         iter.remove();
         pkgs.put(pkg.source, pkg);
+        removed += 1;
+      }
+      if (removed == 0) {
+        throw new AssertionError("One or more packages missing depends: " + inPkgs);
       }
     }
     return new ArrayList<>(pkgs.values());
