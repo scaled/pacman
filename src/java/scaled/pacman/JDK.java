@@ -29,7 +29,10 @@ public class JDK {
         findJDKs(_jdks, "/System/Library/Java/JavaVirtualMachines");
       }
       else if (isWin) {} // TODO!
-      else if (isLin) {} // TODO!
+      else if (isLin) {
+        findJDKs(_jdks, "/usr/lib/jvm");
+        // TODO: other install dirs on Linux?
+      }
       // else halp!
 
       // if our running JDK is just a JRE, move it  to the end of the list,
@@ -43,7 +46,7 @@ public class JDK {
 
   public static void main (String[] args) {
     for (JDK jdk : jdks()) {
-      System.out.println(jdk.version() + " -> " + jdk.home);
+      System.out.println(jdk.version() + " (" + jdk.majorVersion() + ") -> " + jdk.home);
     }
   }
 
@@ -52,18 +55,35 @@ public class JDK {
 
   public JDK (Path home) {
     this.home = home;
-    try {
-      for (String line : Files.readAllLines(home.resolve("release"))) {
-        String[] parts = line.split("=", 2);
-        if (parts.length == 2) {
-          String key = parts[0], value = parts[1];
-          _releaseData.put(key.trim(), value.trim().replaceAll("^\"", "").replaceAll("\"$", ""));
-        } else {
-          System.err.println("Invalid 'release' line '" + line + "'");
+    Path release = home.resolve("release");
+    if (Files.exists(release)) {
+      try {
+        for (String line : Files.readAllLines(home.resolve("release"))) {
+          String[] parts = line.split("=", 2);
+          if (parts.length == 2) {
+            String key = parts[0], value = parts[1];
+            _releaseData.put(key.trim(), value.trim().replaceAll("^\"", "").replaceAll("\"$", ""));
+          } else {
+            System.err.println("Invalid 'release' line '" + line + "'");
+          }
         }
+      } catch (Exception e) {
+        e.printStackTrace(System.err);
       }
-    } catch (Exception e) {
-      e.printStackTrace(System.err);
+    } else {
+      try {
+        Path java = home.resolve("bin").resolve("java");
+        for (String line : Exec.exec(home, java.toString(), "-fullversion").error()) {
+          if (line.contains("full version")) {
+            int qidx = line.indexOf("\"");
+            if (qidx >= 0) {
+              _releaseData.put("JAVA_VERSION", line.substring(qidx+1, line.length()-2));
+            }
+          }
+        }
+      } catch (Exception e) {
+        System.err.println("Failed to run 'java -fullversion' in " + home + ": " + e);
+      }
     }
   }
 
@@ -107,7 +127,12 @@ public class JDK {
       Path path = Paths.get(dir);
       if (Files.exists(path)) {
         for (Path subdir : Files.list(path).collect(Collectors.toList())) {
-          Path home = subdir.resolve("Contents").resolve("Home");
+          Path real = subdir.toRealPath();
+          if (_jdks.stream().anyMatch(jdk -> jdk.home.equals(real))) {
+            continue;
+          }
+          if (isHome(subdir)) jdks.add(new JDK(real));
+          Path home = real.resolve("Contents").resolve("Home");
           if (isHome(home)) jdks.add(new JDK(home));
         }
       }
@@ -117,8 +142,7 @@ public class JDK {
   }
 
   private static boolean isHome (Path home) {
-    return (Files.exists(home.resolve("bin").resolve("javac")) &&
-            Files.exists(home.resolve("release")));
+    return Files.exists(home.resolve("bin").resolve("javac"));
   }
 
   private static String os = System.getProperty("os.name");

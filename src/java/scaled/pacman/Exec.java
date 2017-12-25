@@ -37,6 +37,15 @@ public class Exec {
       return output;
     }
 
+    public List<String> error () throws IOException {
+      Process p = _pb.start();
+      BufferedReader in = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+      List<String> output = new ArrayList<>();
+      String line;
+      while ((line = in.readLine()) != null) output.add(line);
+      return output;
+    }
+
     private Handle (ProcessBuilder pb) {
       _pb = pb;
     }
