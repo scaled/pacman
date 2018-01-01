@@ -137,7 +137,7 @@ public class PackageBuilder {
     // find out what version of kotlin-library is in our depends
     Depends deps = mod.depends(_repo.resolver);
     String kotlinVers = deps.findVersion("org.jetbrains.kotlin:kotlin-stdlib");
-    if (kotlinVers == null) kotlinVers = "1.0.0-beta-1038";
+    if (kotlinVers == null) kotlinVers = "1.2.10";
 
     // use kotlin-compiler of the same version
     String kotlincId = "org.jetbrains.kotlin:kotlin-compiler:" + kotlinVers;
