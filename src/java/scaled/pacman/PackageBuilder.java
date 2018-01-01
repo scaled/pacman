@@ -147,7 +147,7 @@ public class PackageBuilder {
 
     // cmd.addAll(mod.pkg.ktcopts);
     Path target = mod.root.relativize(mod.classesDir());
-    cmd.add("-d"); cmd.add(target.toString());
+    cmd.add("-no-stdlib"); cmd.add("-d"); cmd.add(target.toString());
     List<Path> cp = buildClasspath(mod, mod.depends(_repo.resolver));
     /* TODO: needed?
     // if we're compiling multiple languages, we need to add the target directory to our classpath
