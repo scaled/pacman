@@ -95,7 +95,7 @@ public class PackageBuilder {
     // find out what version of scala-library is in our depends
     Depends deps = mod.depends(_repo.resolver);
     String scalaVers = deps.findVersion("org.scala-lang:scala-library");
-    if (scalaVers == null) scalaVers = "2.11.7";
+    if (scalaVers == null) scalaVers = "2.12.4";
 
     // use scala-compiler of the same version
     String scalacId = "org.scala-lang:scala-compiler:" + scalaVers;

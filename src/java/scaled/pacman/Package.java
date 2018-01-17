@@ -26,7 +26,7 @@ public class Package {
 
   /** The default options passed to javac. */
   public static final List<String> DEFAULT_JCOPTS = Arrays.asList(
-    "-source", "1.8", "-target", "1.8", "-Xlint:all");
+    "-source", "1.9", "-target", "1.9", "-Xlint:all");
 
   /** The default options passed to scalac. */
   public static final List<String> DEFAULT_SCOPTS = Arrays.asList(

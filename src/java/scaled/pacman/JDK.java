@@ -94,8 +94,10 @@ public class JDK {
   /** Returns the major version of this JDK: 8, 7, 6, etc.
     * Returns `?` if it cannot be determined. */
   public String majorVersion () {
+    // we handle two forms: 1.n.x (<= JDK 8) and n.x.y (>= JDK 9)
     String[] parts = version().split("\\.", 3);
-    return (parts.length == 3 && parts[0].equals("1")) ? parts[1] : "?";
+    if (parts.length != 3) return "?";
+    return parts[0].equals("1") ? parts[1] : parts[0];
   }
 
   /** Returns the path to the `java` command for this JDK. */
