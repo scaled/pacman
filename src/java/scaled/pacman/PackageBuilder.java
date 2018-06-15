@@ -125,6 +125,7 @@ public class PackageBuilder {
     // because we may have Java source files that depend on classes compiled by the other language
     if (multiLang) cp.add(0, target);
     if (!cp.isEmpty()) { cmd.add("-cp"); cmd.add(classpathToString(cp)); }
+    cmd.add("-sourcepath"); cmd.add(javaDir.toString());
     addSources(mod.root, javaDir, ".java", cmd);
 
     Exec.exec(mod.root, cmd).expect(0, "Java build failed.");
