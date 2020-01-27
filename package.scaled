@@ -5,5 +5,5 @@ descrip: The Scaled Package Manager. Wakka wakka wakka.
  weburl: https://github.com/scaled/pacman/
 license: New BSD
  jcopts: -Xlint:-serial
- depend: mvn:com.samskivert:mfetcher:1.0.5
+ depend: mvn:com.samskivert:mfetcher:1.0.6
  module: test
