@@ -32,8 +32,8 @@ import java.util.List;
  */
 public class Bootstrap {
 
-  static final String MFETCHER_VERS = "1.0.5";
-  static final long   MFETCHER_SIZE = 1808704;
+  static final String MFETCHER_VERS = "1.0.6";
+  static final long   MFETCHER_SIZE = 1808749;
 
   static final String MCENTRAL_URL = "https://repo1.maven.org/maven2/";
   static final String PACMAN_URL = "https://github.com/scaled/pacman.git";
