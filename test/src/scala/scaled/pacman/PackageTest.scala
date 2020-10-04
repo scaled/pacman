@@ -25,14 +25,14 @@ class PackageTest {
   )
   val scaledSource = new Source(Source.VCS.GIT, new URI("https://github.com/scaled/scaled-api.git"))
 
-  @Test def testValid () {
+  @Test def testValid () :Unit = {
     val info = new Package(cwd, scaledApi.asJava)
     assertEquals(scaledSource, info.source)
     assertEquals(Collections.emptyList(), info.module(Module.DEFAULT).depends)
     assertTrue(info.errors.isEmpty)
   }
 
-  @Test def testExtraCruft () {
+  @Test def testExtraCruft () :Unit = {
     val extra = Seq(
       "bezelnut: ruh ruh",
       " peanuts: and popcorn"
@@ -42,7 +42,7 @@ class PackageTest {
     assertEquals(2, info.errors.size)
   }
 
-  @Test def testDoubleSource () {
+  @Test def testDoubleSource () :Unit = {
     val extra = Seq(
       " source: git:https://github.com/scaled/scaled-peanut.git"
     )
@@ -52,7 +52,7 @@ class PackageTest {
     assertTrue(info.errors.get(0) startsWith "'source'")
   }
 
-  @Test def testDepends () {
+  @Test def testDepends () :Unit = {
     val extra = Seq(
       " depend: git:https://github.com/scaled/java-mode.git",
       " depend: mvn:com.samskivert.scaled:textmate-grammar:1.0-SNAPSHOT:jar"

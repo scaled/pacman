@@ -12,7 +12,7 @@ class ExecTest {
 
   val cwd = Paths.get(Props.cwd)
 
-  @Test def testOutput () {
+  @Test def testOutput () :Unit = {
     val out = Exec.exec(cwd, "echo", "peanut").output()
     assertEquals(1, out.size)
     assertEquals("peanut", out.get(0))
